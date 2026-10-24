@@ -1,4 +1,4 @@
-# 🕒 ChronyPi Master Dashboard
+# 🕒 ChronyPi Dashboard
 
 Ein modernes, leichtgewichtiges Web-Dashboard für den **Chrony NTP-Server** auf dem Raspberry Pi. Es kombiniert historische Offsets & Drifts (im Stil von *Time-Pi*) mit detailliertem Telemetrie- und Client-Monitoring (im Stil von *TICC-DASH*) sowie einer zentralen Einstellungsverwaltung in einer übersichtlichen Single-Page-App.
 
