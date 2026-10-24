@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 import subprocess
 import sqlite3
@@ -21,6 +21,21 @@ def init_db():
             stratum INTEGER
         )
     ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        )
+    ''')
+    # Default-Einstellungen setzen
+    defaults = {
+        'polling_interval': '5',
+        'warning_offset': '10.0',
+        'warning_drift': '50.0',
+        'retention_days': '30'
+    }
+    for k, v in defaults.items():
+        cursor.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", (k, v))
     conn.commit()
     conn.close()
 
@@ -151,6 +166,23 @@ def get_chrony():
         "clients": clients,
         "history": history
     })
+
+@app.route("/api/settings", methods=["GET", "POST"])
+def handle_settings():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    if request.method == "POST":
+        data = request.json
+        for key, value in data.items():
+            cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (key, str(value)))
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "success", "message": "Settings saved"})
+    else:
+        cursor.execute("SELECT key, value FROM settings")
+        settings = {row[0]: row[1] for row in cursor.fetchall()}
+        conn.close()
+        return jsonify(settings)
 
 if __name__ == "__main__":
     init_db()
