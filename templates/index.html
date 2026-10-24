@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrony Master Dashboard — Raspberry Pi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            900: '#064e3b',
+                            accent: '#06b6d4'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.8); border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+    <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400">
+                        <i class="fa-solid font-mono text-xl fa-clock"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-lg font-bold text-white tracking-wide">Chrony<span class="text-emerald-400">Pi</span></h1>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 font-mono">v2.4-combined</span>
+                        </div>
+                        <p class="text-xs text-slate-400 hidden sm:block">Raspberry Pi Time Server & Client Telemetry</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div class="hidden md:flex flex-col items-end px-3 py-1 bg-slate-950/60 rounded-md border border-slate-800/80">
+                        <span id="utc-clock" class="font-mono text-sm font-semibold text-emerald-400 tracking-wider">00:00:00.000 UTC</span>
+                        <span id="local-clock" class="text-[10px] font-mono text-slate-400">Local: --:--:--</span>
+                    </div>
+
+                    <div class="flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-800/50 space-x-2">
+                        <span class="relative flex h-2.5 w-2.5">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                        </span>
+                        <span id="sync-status">SYNCHRONIZED</span>
+                    </div>
+
+                    <button onclick="toggleTheme()" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition">
+                        <i id="theme-icon" class="fa-solid fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition">
+                <div class="flex items-center justify-between text-slate-400 text-xs">
+                    <span>Reference Source</span>
+                    <i class="fa-solid fa-server text-cyan-400"></i>
+                </div>
+                <div class="mt-2">
+                    <div id="kpi-refid" class="text-lg font-bold font-mono text-white truncate">-</div>
+                    <div id="kpi-refname" class="text-xs text-cyan-400 truncate">System Clock Source</div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition">
+                <div class="flex items-center justify-between text-slate-400 text-xs">
+                    <span>System Offset</span>
+                    <i class="fa-solid fa-gauge-high text-emerald-400"></i>
+                </div>
+                <div class="mt-2">
+                    <div id="kpi-offset" class="text-xl font-bold font-mono text-emerald-400">-</div>
+                    <div class="text-xs text-slate-400">RMS: <span id="kpi-rms" class="font-mono text-slate-300">-</span></div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition">
+                <div class="flex items-center justify-between text-slate-400 text-xs">
+                    <span>Stratum Level</span>
+                    <i class="fa-solid fa-layer-group text-purple-400"></i>
+                </div>
+                <div class="mt-2">
+                    <div id="kpi-stratum" class="text-xl font-bold font-mono text-purple-300">-</div>
+                    <div class="text-xs text-slate-400">Freq: <span id="kpi-freq" class="font-mono text-slate-300">-</span></div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition">
+                <div class="flex items-center justify-between text-slate-400 text-xs">
+                    <span>Root Delay / Dispersion</span>
+                    <i class="fa-solid fa-network-wired text-amber-400"></i>
+                </div>
+                <div class="mt-2">
+                    <div id="kpi-rootdelay" class="text-lg font-bold font-mono text-amber-300">-</div>
+                    <div class="text-xs text-slate-400">Dispersion: <span id="kpi-dispersion" class="font-mono text-slate-300">-</span></div>
+                </div>
+            </div>
+
+            <div class="col-span-2 md:col-span-1 bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition">
+                <div class="flex items-center justify-between text-slate-400 text-xs">
+                    <span>Connected Clients</span>
+                    <i class="fa-solid fa-users text-blue-400"></i>
+                </div>
+                <div class="mt-2">
+                    <div id="kpi-client-count" class="text-xl font-bold font-mono text-blue-400">0 Active</div>
+                    <div class="text-xs text-slate-400">Total Packets: <span id="kpi-total-packets" class="font-mono text-slate-300">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <nav class="flex space-x-2">
+                <button id="tab-btn-tracking" onclick="switchTab('tracking')" class="px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Tracking & History (Time-Pi)</span>
+                </button>
+                <button id="tab-btn-clients" onclick="switchTab('clients')" class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent flex items-center gap-2">
+                    <i class="fa-solid fa-users-viewfinder"></i>
+                    <span>Client Monitoring (TICC-DASH)</span>
+                </button>
+            </nav>
+        </div>
+
+        <div id="tab-tracking-content" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-200">System Clock Offset</h3>
+                            <p class="text-xs text-slate-400">Abweichung von der Referenzzeit (Microseconds µs)</p>
+                        </div>
+                    </div>
+                    <div class="relative h-64 w-full flex-1">
+                        <canvas id="offsetChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-200">Frequency Drift (PPM)</h3>
+                            <p class="text-xs text-slate-400">Korrektur der Uhrengeschwindigkeit in Parts Per Million</p>
+                        </div>
+                    </div>
+                    <div class="relative h-64 w-full flex-1">
+                        <canvas id="frequencyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-200">Active Upstream NTP Sources (`chronyc sources`)</h3>
+                    </div>
+                    <button onclick="fetchChronyData()" class="p-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate"></i>
+                        <span>Refresh Sources</span>
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 text-xs font-mono uppercase bg-slate-950/40">
+                                <th class="py-3 px-4">State</th>
+                                <th class="py-3 px-4">Name / IP Address</th>
+                                <th class="py-3 px-4">Stratum</th>
+                                <th class="py-3 px-4">Poll</th>
+                                <th class="py-3 px-4">Reach</th>
+                                <th class="py-3 px-4">LastRx</th>
+                                <th class="py-3 px-4">Last Sample Offset</th>
+                                <th class="py-3 px-4">Jitter / Margin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sources-table-body" class="divide-y divide-slate-800/60 font-mono text-xs text-slate-300"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-clients-content" class="hidden space-y-6">
+            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="relative w-full sm:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                    <input type="text" id="client-search-input" onkeyup="filterClients()" placeholder="Filter client by IP..." class="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-emerald-500 transition">
+                </div>
+            </div>
+
+            <div class="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+                <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-200">Network NTP Clients (`chronyc clients`)</h3>
+                    </div>
+                    <span id="client-table-count" class="text-xs font-mono bg-blue-950 text-blue-300 border border-blue-800/50 px-2.5 py-1 rounded-full">0 Clients</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 text-xs font-mono uppercase bg-slate-950/40">
+                                <th class="py-3 px-4">Client IP</th>
+                                <th class="py-3 px-4">Type</th>
+                                <th class="py-3 px-4">Packets Sent</th>
+                                <th class="py-3 px-4">Drop Count</th>
+                                <th class="py-3 px-4">Last Access</th>
+                                <th class="py-3 px-4">Poll Interval</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clients-table-body" class="divide-y divide-slate-800/60 text-xs font-mono text-slate-300"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let offsetChartInstance = null;
+        let frequencyChartInstance = null;
+        let globalClients = [];
+
+        function startLiveClock() {
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('utc-clock').innerText = now.toISOString().split('T')[1].replace('Z', '') + ' UTC';
+                document.getElementById('local-clock').innerText = 'Local: ' + now.toLocaleTimeString();
+            }, 100);
+        }
+
+        function initCharts() {
+            const ctxOffset = document.getElementById('offsetChart').getContext('2d');
+            offsetChartInstance = new Chart(ctxOffset, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Offset (µs)', data: [], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.08)', fill: true, tension: 0.2, borderWidth: 2, pointRadius: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(51, 65, 85, 0.3)' }, ticks: { color: '#94a3b8' } }, y: { grid: { color: 'rgba(51, 65, 85, 0.3)' }, ticks: { color: '#94a3b8' } } } }
+            });
+
+            const ctxFreq = document.getElementById('frequencyChart').getContext('2d');
+            frequencyChartInstance = new Chart(ctxFreq, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Frequency (ppm)', data: [], borderColor: '#06b6d4', backgroundColor: 'rgba(6, 182, 212, 0.08)', fill: true, tension: 0.2, borderWidth: 2, pointRadius: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(51, 65, 85, 0.3)' }, ticks: { color: '#94a3b8' } }, y: { grid: { color: 'rgba(51, 65, 85, 0.3)' }, ticks: { color: '#94a3b8' } } } }
+            });
+        }
+
+        async function fetchChronyData() {
+            try {
+                const res = await fetch('/api/chrony');
+                const data = await res.json();
+
+                document.getElementById('kpi-refid').innerText = data.tracking.reference_id || 'N/A';
+                document.getElementById('kpi-offset').innerText = data.tracking.system_offset || '-';
+                document.getElementById('kpi-rms').innerText = data.tracking.rms_offset || '-';
+                document.getElementById('kpi-stratum').innerText = `Stratum ${data.tracking.stratum}`;
+                document.getElementById('kpi-freq').innerText = data.tracking.frequency || '-';
+                document.getElementById('kpi-rootdelay').innerText = data.tracking.root_delay || '-';
+                document.getElementById('kpi-dispersion').innerText = data.tracking.root_dispersion || '-';
+
+                globalClients = data.clients || [];
+                document.getElementById('kpi-client-count').innerText = `${globalClients.length} Active`;
+                const totalPkts = globalClients.reduce((acc, c) => acc + (c.packets || 0), 0);
+                document.getElementById('kpi-total-packets').innerText = totalPkts.toLocaleString();
+
+                renderSourcesTable(data.sources || []);
+                renderClientsTable(globalClients);
+
+                if (data.history && data.history.length > 0) {
+                    const labels = data.history.map(h => new Date(h.ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+                    offsetChartInstance.data.labels = labels;
+                    offsetChartInstance.data.datasets[0].data = data.history.map(h => h.offset);
+                    offsetChartInstance.update();
+
+                    frequencyChartInstance.data.labels = labels;
+                    frequencyChartInstance.data.datasets[0].data = data.history.map(h => h.freq);
+                    frequencyChartInstance.update();
+                }
+            } catch (err) {
+                console.error("API error:", err);
+            }
+        }
+
+        function renderSourcesTable(sources) {
+            const tbody = document.getElementById('sources-table-body');
+            tbody.innerHTML = sources.map(s => `
+                <tr class="hover:bg-slate-900/80 transition">
+                    <td class="py-3 px-4"><span class="px-2 py-0.5 rounded ${s.state === '*' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold' : 'bg-slate-800 text-slate-400'}">${s.state}</span></td>
+                    <td class="py-3 px-4 font-bold text-white">${s.name}</td>
+                    <td class="py-3 px-4"><span class="px-2 py-0.5 bg-slate-800 rounded">Stratum ${s.stratum}</span></td>
+                    <td class="py-3 px-4">${s.poll}</td>
+                    <td class="py-3 px-4 text-emerald-400">${s.reach}</td>
+                    <td class="py-3 px-4 text-slate-400">${s.lastRx}</td>
+                    <td class="py-3 px-4 text-emerald-400 font-bold">${s.offset}</td>
+                    <td class="py-3 px-4 text-slate-400">${s.jitter}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderClientsTable(clients) {
+            const tbody = document.getElementById('clients-table-body');
+            document.getElementById('client-table-count').innerText = `${clients.length} Clients`;
+            tbody.innerHTML = clients.map(c => `
+                <tr class="hover:bg-slate-900/80 transition">
+                    <td class="py-3 px-4 font-bold text-white">${c.ip}</td>
+                    <td class="py-3 px-4"><span class="px-2 py-0.5 text-[10px] bg-blue-950 text-blue-300 border border-blue-800/50 rounded font-bold">${c.type}</span></td>
+                    <td class="py-3 px-4 text-slate-200">${c.packets.toLocaleString()}</td>
+                    <td class="py-3 px-4"><span class="${c.drops > 0 ? 'text-amber-400 font-bold' : 'text-slate-500'}">${c.drops}</span></td>
+                    <td class="py-3 px-4 text-emerald-400">${c.lastAccess}</td>
+                    <td class="py-3 px-4 text-slate-400">${c.poll}</td>
+                </tr>
+            `).join('');
+        }
+
+        function filterClients() {
+            const q = document.getElementById('client-search-input').value.toLowerCase();
+            renderClientsTable(globalClients.filter(c => c.ip.toLowerCase().includes(q)));
+        }
+
+        function switchTab(tab) {
+            document.getElementById('tab-tracking-content').classList.toggle('hidden', tab !== 'tracking');
+            document.getElementById('tab-clients-content').classList.toggle('hidden', tab !== 'clients');
+            document.getElementById('tab-btn-tracking').className = tab === 'tracking' ? "px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-2" : "px-4 py-2 text-sm font-semibold rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent flex items-center gap-2";
+            document.getElementById('tab-btn-clients').className = tab === 'clients' ? "px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-2" : "px-4 py-2 text-sm font-semibold rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent flex items-center gap-2";
+        }
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        window.onload = function() {
+            startLiveClock();
+            initCharts();
+            fetchChronyData();
+            setInterval(fetchChronyData, 10000);
+        };
+    </script>
+</body>
+</html>
