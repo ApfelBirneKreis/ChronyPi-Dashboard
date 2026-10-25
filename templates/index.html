@@ -439,10 +439,12 @@
                 const data = await res.json();
 
                 const t = data.tracking || {};
-                document.getElementById('kpi-refid').innerText = t.reference_id || '-';
-                document.getElementById('kpi-refname').innerText = t.reference_name || t.reference_id || 'System Clock Source';
                 
-                // Offset sauber formatieren (in Mikro sekunden µs wie im Design-Beispiel)
+                // Reference Source exakt wie in der Vorlage füllen (IP und Servername)
+                document.getElementById('kpi-refid').innerText = data.ref_ip || t.reference_id || '-';
+                document.getElementById('kpi-refname').innerText = data.ref_name || 'System Clock Source';
+
+                // Offset sauber in Mikrosekunden µs formatieren
                 let rawTime = t.system_time || '0';
                 let formattedOffset = '-';
                 if (rawTime !== '-') {
@@ -463,7 +465,7 @@
                 document.getElementById('kpi-rootdelay').innerText = t.root_delay || '-';
                 document.getElementById('kpi-dispersion').innerText = t.root_dispersion || '-';
 
-                // Upstream Sources mit exakten Status-Badges mappen (* Selected, + Combined)
+                // Upstream Quellen mappen
                 const sourcesBody = document.getElementById('sources-table-body');
                 sourcesBody.innerHTML = (data.sources || []).map(s => {
                     let rawState = s.state.replace('^', '');
