@@ -27,7 +27,6 @@ def init_db():
             value TEXT
         )
     ''')
-    # Default-Einstellungen setzen
     defaults = {
         'polling_interval': '5',
         'warning_offset': '10.0',
@@ -142,48 +141,3 @@ def get_chrony():
     save_history(tracking)
     sources = parse_sources()
     clients = parse_clients()
-    
-    history = []
-    try:
-        conn = sqlite3.connect(DB_NAME)
-        cursor = conn.cursor()
-        cursor.execute("SELECT timestamp, system_offset, frequency, stratum FROM history ORDER BY id DESC LIMIT 50")
-        rows = cursor.fetchall()
-        conn.close()
-        for row in reversed(rows):
-            history.append({
-                "timestamp": row[0],
-                "system_offset": row[1],
-                "frequency": row[2],
-                "stratum": row[3]
-            })
-    except Exception as e:
-        print(f"Error reading history: {e}")
-
-    return jsonify({
-        "tracking": tracking,
-        "sources": sources,
-        "clients": clients,
-        "history": history
-    })
-
-@app.route("/api/settings", methods=["GET", "POST"])
-def handle_settings():
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    if request.method == "POST":
-        data = request.json
-        for key, value in data.items():
-            cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (key, str(value)))
-        conn.commit()
-        conn.close()
-        return jsonify({"status": "success", "message": "Settings saved"})
-    else:
-        cursor.execute("SELECT key, value FROM settings")
-        settings = {row[0]: row[1] for row in cursor.fetchall()}
-        conn.close()
-        return jsonify(settings)
-
-if __name__ == "__main__":
-    init_db()
-    app.run(host="0.0.0.0", port=8080)
