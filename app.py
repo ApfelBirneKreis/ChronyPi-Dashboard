@@ -68,6 +68,8 @@ def parse_tracking():
 
 def parse_sources():
     sources = []
+    ref_ip = "-"
+    ref_name = "-"
     try:
         output = subprocess.check_output(["chronyc", "sources"], universal_newlines=True)
         lines = output.splitlines()
@@ -76,18 +78,23 @@ def parse_sources():
                 continue
             parts = line.split()
             if len(parts) >= 7:
+                state = parts[0]
+                name = parts[1]
                 sources.append({
-                    "state": parts[0],
-                    "name": parts[1],
+                    "state": state,
+                    "name": name,
                     "stratum": parts[2],
                     "poll": parts[3],
                     "reach": parts[4],
                     "last_rx": parts[5],
                     "sample": " ".join(parts[6:])
                 })
+                if "*" in state:
+                    ref_name = name
+                    ref_ip = name
     except Exception as e:
         print(f"Error parsing sources: {e}")
-    return sources
+    return sources, ref_ip, ref_name
 
 def parse_clients():
     clients = []
@@ -98,13 +105,21 @@ def parse_clients():
             if "Hostname" in line or "===" in line or not line.strip():
                 continue
             parts = line.split()
-            if len(parts) >= 2:
+            if len(parts) >= 7:
                 clients.append({
                     "hostname": parts[0],
                     "ntp_packets": safe_int(parts[1]),
-                    "drop_packets": safe_int(parts[2]) if len(parts) > 2 else 0,
-                    "interval": parts[3] if len(parts) > 3 else "-",
-                    "last": parts[5] if len(parts) > 5 else "-"
+                    "drop_packets": safe_int(parts[5]),
+                    "interval": f"{parts[6]} ({2**safe_int(parts[6])}s)",
+                    "last": f"{parts[3]}s ago"
+                })
+            elif len(parts) >= 2:
+                clients.append({
+                    "hostname": parts[0],
+                    "ntp_packets": safe_int(parts[1]),
+                    "drop_packets": 0,
+                    "interval": "-",
+                    "last": "-"
                 })
     except Exception as e:
         print(f"Error parsing clients: {e}")
@@ -139,7 +154,7 @@ def index():
 def get_chrony():
     tracking = parse_tracking()
     save_history(tracking)
-    sources = parse_sources()
+    sources, ref_ip, ref_name = parse_sources()
     clients = parse_clients()
     
     history = []
@@ -163,7 +178,9 @@ def get_chrony():
         "tracking": tracking,
         "sources": sources,
         "clients": clients,
-        "history": history
+        "history": history,
+        "ref_ip": ref_ip,
+        "ref_name": ref_name
     })
 
 @app.route("/api/settings", methods=["GET", "POST"])
