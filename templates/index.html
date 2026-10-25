@@ -54,34 +54,34 @@
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
 
     <!-- TOP NAVIGATION & HEADER BAR -->
-    <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-50">
+    <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <!-- Brand Title -->
                 <div class="flex items-center space-x-3">
-                    <div class="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400">
+                    <div class="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-600 dark:text-emerald-400">
                         <i class="fa-solid font-mono text-xl fa-clock"></i>
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
-                            <h1 class="text-lg font-bold text-white tracking-wide">Chrony<span class="text-emerald-400">Pi</span></h1>
-                            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 font-mono">v2.4-combined</span>
+                            <h1 class="text-lg font-bold text-slate-900 dark:text-white tracking-wide">Chrony<span class="text-emerald-500 dark:text-emerald-400">Pi</span></h1>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-mono">v2.4-combined</span>
                         </div>
-                        <p class="text-xs text-slate-400 hidden sm:block">Raspberry Pi Time Server & Client Telemetry</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Raspberry Pi Time Server & Client Telemetry</p>
                     </div>
                 </div>
 
                 <!-- Live Clock Display & Controls -->
                 <div class="flex items-center space-x-4">
-                    <div class="hidden md:flex flex-col items-end px-3 py-1 bg-slate-950/60 rounded-md border border-slate-800/80">
-                        <span id="utc-clock" class="font-mono text-sm font-semibold text-emerald-400 tracking-wider">00:00:00.000 UTC</span>
-                        <span id="local-clock" class="text-[10px] font-mono text-slate-400">Local: --:--:--</span>
+                    <div class="hidden md:flex flex-col items-end px-3 py-1 bg-slate-100 dark:bg-slate-950/60 rounded-md border border-slate-200 dark:border-slate-800/80">
+                        <span id="utc-clock" class="font-mono text-sm font-semibold text-emerald-600 dark:text-emerald-400 tracking-wider">00:00:00.000 UTC</span>
+                        <span id="local-clock" class="text-[10px] font-mono text-slate-500 dark:text-slate-400">Local: --:--:--</span>
                     </div>
 
-                    <div class="flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-800/50 space-x-2">
+                    <div class="flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800/50 space-x-2">
                         <span class="relative flex h-2.5 w-2.5">
                           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                           <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
@@ -89,7 +89,7 @@
                         <span id="sync-status">SYNCHRONIZED</span>
                     </div>
 
-                    <button onclick="toggleTheme()" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition">
+                    <button onclick="toggleTheme()" class="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                         <i id="theme-icon" class="fa-solid fa-moon"></i>
                     </button>
                 </div>
@@ -102,127 +102,101 @@
 
         <!-- STATS KPI BAR -->
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            <!-- Active Source -->
-            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition">
-                <div class="flex items-center justify-between text-slate-400 text-xs">
+            <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition shadow-sm">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs">
                     <span>Reference Source</span>
-                    <i class="fa-solid fa-server text-cyan-400"></i>
+                    <i class="fa-solid fa-server text-cyan-500 dark:text-cyan-400"></i>
                 </div>
                 <div class="mt-2">
-                    <div id="kpi-refid" class="text-lg font-bold font-mono text-white truncate">-</div>
-                    <div id="kpi-refname" class="text-xs text-cyan-400 truncate">System Clock Source</div>
+                    <div id="kpi-refid" class="text-lg font-bold font-mono text-slate-900 dark:text-white truncate">-</div>
+                    <div id="kpi-refname" class="text-xs text-cyan-600 dark:text-cyan-400 truncate">System Clock Source</div>
                 </div>
             </div>
 
-            <!-- System Offset -->
-            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition">
-                <div class="flex items-center justify-between text-slate-400 text-xs">
+            <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition shadow-sm">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs">
                     <span>System Offset</span>
-                    <i class="fa-solid fa-gauge-high text-emerald-400"></i>
+                    <i class="fa-solid fa-gauge-high text-emerald-500 dark:text-emerald-400"></i>
                 </div>
                 <div class="mt-2">
-                    <div id="kpi-offset" class="text-xl font-bold font-mono text-emerald-400">-</div>
-                    <div class="text-xs text-slate-400">RMS: <span id="kpi-rms" class="font-mono text-slate-300">-</span></div>
+                    <div id="kpi-offset" class="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">-</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400">RMS: <span id="kpi-rms" class="font-mono text-slate-700 dark:text-slate-300">-</span></div>
                 </div>
             </div>
 
-            <!-- Stratum Level -->
-            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition">
-                <div class="flex items-center justify-between text-slate-400 text-xs">
+            <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition shadow-sm">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs">
                     <span>Stratum Level</span>
-                    <i class="fa-solid fa-layer-group text-purple-400"></i>
+                    <i class="fa-solid fa-layer-group text-purple-500 dark:text-purple-400"></i>
                 </div>
                 <div class="mt-2">
-                    <div id="kpi-stratum" class="text-xl font-bold font-mono text-purple-300">-</div>
-                    <div class="text-xs text-slate-400">Frequency: <span id="kpi-freq" class="font-mono text-slate-300">-</span></div>
+                    <div id="kpi-stratum" class="text-xl font-bold font-mono text-purple-600 dark:text-purple-300">-</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400">Frequency: <span id="kpi-freq" class="font-mono text-slate-700 dark:text-slate-300">-</span></div>
                 </div>
             </div>
 
-            <!-- Root Delay -->
-            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition">
-                <div class="flex items-center justify-between text-slate-400 text-xs">
+            <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition shadow-sm">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs">
                     <span>Root Delay / Dispersion</span>
-                    <i class="fa-solid fa-network-wired text-amber-400"></i>
+                    <i class="fa-solid fa-network-wired text-amber-500 dark:text-amber-400"></i>
                 </div>
                 <div class="mt-2">
-                    <div id="kpi-rootdelay" class="text-lg font-bold font-mono text-amber-300">-</div>
-                    <div class="text-xs text-slate-400">Dispersion: <span id="kpi-dispersion" class="font-mono text-slate-300">-</span></div>
+                    <div id="kpi-rootdelay" class="text-lg font-bold font-mono text-amber-600 dark:text-amber-300">-</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400">Dispersion: <span id="kpi-dispersion" class="font-mono text-slate-700 dark:text-slate-300">-</span></div>
                 </div>
             </div>
 
-            <!-- Active NTP Clients -->
-            <div class="col-span-2 md:col-span-1 bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition">
-                <div class="flex items-center justify-between text-slate-400 text-xs">
+            <div class="col-span-2 md:col-span-1 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition shadow-sm">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs">
                     <span>Connected Clients</span>
-                    <i class="fa-solid fa-users text-blue-400"></i>
+                    <i class="fa-solid fa-users text-blue-500 dark:text-blue-400"></i>
                 </div>
                 <div class="mt-2">
-                    <div id="kpi-client-count" class="text-xl font-bold font-mono text-blue-400">0 Active</div>
-                    <div class="text-xs text-slate-400">Total Packets: <span id="kpi-total-packets" class="font-mono text-slate-300">0</span></div>
+                    <div id="kpi-client-count" class="text-xl font-bold font-mono text-blue-600 dark:text-blue-400">0 Active</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400">Total Packets: <span id="kpi-total-packets" class="font-mono text-slate-700 dark:text-slate-300">0</span></div>
                 </div>
             </div>
         </div>
 
         <!-- DASHBOARD TAB NAVIGATION -->
-        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
             <nav class="flex space-x-2" aria-label="Tabs">
-                <button id="tab-btn-tracking" onclick="switchTab('tracking')" class="px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-2 transition">
+                <button id="tab-btn-tracking" onclick="switchTab('tracking')" class="px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-2 transition">
                     <i class="fa-solid fa-chart-line"></i>
                     <span>Tracking & History (Time-Pi)</span>
                 </button>
-                <button id="tab-btn-clients" onclick="switchTab('clients')" class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent flex items-center gap-2 transition">
+                <button id="tab-btn-clients" onclick="switchTab('clients')" class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition">
                     <i class="fa-solid fa-users-viewfinder"></i>
                     <span>Client Monitoring (TICC-DASH)</span>
                 </button>
-                <button id="tab-btn-settings" onclick="switchTab('settings')" class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent flex items-center gap-2 transition">
+                <button id="tab-btn-settings" onclick="switchTab('settings')" class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition">
                     <i class="fa-solid fa-gear"></i>
                     <span>Einstellungen</span>
                 </button>
             </nav>
-
-            <button onclick="toggleGuideModal()" class="text-xs text-slate-400 hover:text-emerald-400 flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-md transition">
-                <i class="fa-solid fa-code text-emerald-500"></i>
-                <span class="hidden sm:inline">Raspberry Pi Setup Guide</span>
-            </button>
         </div>
 
         <!-- TAB 1: TRACKING & HISTORICAL GRAPHS -->
         <div id="tab-tracking-content" class="space-y-6">
-            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
-                <div class="flex items-center space-x-2">
-                    <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Live Status:</span>
-                    <span class="text-xs text-emerald-400 font-mono">Automatischer Live-Abruf aktiv</span>
-                </div>
-                <div class="flex items-center space-x-4 text-xs">
-                    <span class="flex items-center gap-1.5 text-emerald-400"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Offset (µs)</span>
-                    <span class="flex items-center gap-1.5 text-cyan-400"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span> Frequency (ppm)</span>
-                </div>
-            </div>
-
-            <!-- Historical Charts Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Clock Offset Chart -->
-                <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5 flex flex-col">
+                <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col shadow-sm">
                     <div class="flex items-center justify-between mb-4">
                         <div>
-                            <h3 class="text-sm font-bold text-slate-200">System Clock Offset</h3>
-                            <p class="text-xs text-slate-400">Abweichung von der Referenzzeit (Microseconds µs)</p>
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">System Clock Offset</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Abweichung von der Referenzzeit (Microseconds µs)</p>
                         </div>
-                        <span class="text-xs font-mono px-2 py-1 bg-emerald-950 text-emerald-300 rounded border border-emerald-800/40">Live Telemetrie</span>
                     </div>
                     <div class="relative h-64 w-full flex-1">
                         <canvas id="offsetChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Frequency Drift Chart -->
-                <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5 flex flex-col">
+                <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col shadow-sm">
                     <div class="flex items-center justify-between mb-4">
                         <div>
-                            <h3 class="text-sm font-bold text-slate-200">Frequency Drift (PPM)</h3>
-                            <p class="text-xs text-slate-400">Korrektur der Uhrgeschwindigkeit in Parts Per Million</p>
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Frequency Drift (PPM)</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Korrektur der Uhrgeschwindigkeit in Parts Per Million</p>
                         </div>
-                        <span class="text-xs font-mono px-2 py-1 bg-cyan-950 text-cyan-300 rounded border border-cyan-800/40">Oszillator Stabilität</span>
                     </div>
                     <div class="relative h-64 w-full flex-1">
                         <canvas id="frequencyChart"></canvas>
@@ -230,23 +204,12 @@
                 </div>
             </div>
 
-            <!-- Upstream Sources Table -->
-            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h3 class="text-base font-bold text-slate-200">Active Upstream NTP Sources (`chronyc sources`)</h3>
-                        <p class="text-xs text-slate-400">Reference clocks and peer servers providing clock synchronization</p>
-                    </div>
-                    <button onclick="fetchData()" class="p-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-rotate"></i>
-                        <span>Refresh Sources</span>
-                    </button>
-                </div>
-                
+            <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
+                <h3 class="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">Active Upstream NTP Sources (`chronyc sources`)</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-slate-800 text-slate-400 text-xs font-mono uppercase bg-slate-950/40">
+                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs font-mono uppercase bg-slate-50 dark:bg-slate-950/40">
                                 <th class="py-3 px-4">State</th>
                                 <th class="py-3 px-4">Name / IP Address</th>
                                 <th class="py-3 px-4">Stratum</th>
@@ -256,8 +219,7 @@
                                 <th class="py-3 px-4">Last Sample Offset</th>
                             </tr>
                         </thead>
-                        <tbody id="sources-table-body" class="divide-y divide-slate-800/60 font-mono text-xs text-slate-300">
-                            <!-- Populated dynamically -->
+                        <tbody id="sources-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono text-xs text-slate-700 dark:text-slate-300">
                         </tbody>
                     </table>
                 </div>
@@ -266,26 +228,15 @@
 
         <!-- TAB 2: CONNECTED CLIENTS DASHBOARD -->
         <div id="tab-clients-content" class="hidden space-y-6">
-            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div class="relative w-full sm:w-80">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                    <input type="text" id="client-search-input" onkeyup="filterClients()" placeholder="Filter client by IP or Hostname..." class="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-emerald-500 transition">
+            <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+                <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <h3 class="text-base font-bold text-slate-800 dark:text-slate-200">Network NTP Clients (`chronyc clients`)</h3>
+                    <span id="client-table-count" class="text-xs font-mono bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 px-2.5 py-1 rounded-full">0 clients</span>
                 </div>
-            </div>
-
-            <div class="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
-                <div class="p-4 border-b border-slate-800 flex items-center justify-between">
-                    <div>
-                        <h3 class="text-base font-bold text-slate-200">Network NTP Clients (`chronyc clients`)</h3>
-                        <p class="text-xs text-slate-400">Local machines querying time from this Raspberry Pi chrony daemon</p>
-                    </div>
-                    <span id="client-table-count" class="text-xs font-mono bg-blue-950 text-blue-300 border border-blue-800/50 px-2.5 py-1 rounded-full">0 clients</span>
-                </div>
-
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-slate-800 text-slate-400 text-xs font-mono uppercase bg-slate-950/40">
+                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs font-mono uppercase bg-slate-50 dark:bg-slate-950/40">
                                 <th class="py-3 px-4">Client Host / Address</th>
                                 <th class="py-3 px-4">NTP Packets</th>
                                 <th class="py-3 px-4">Drop Packets</th>
@@ -293,113 +244,72 @@
                                 <th class="py-3 px-4">Last Seen</th>
                             </tr>
                         </thead>
-                        <tbody id="clients-table-body" class="divide-y divide-slate-800/60 text-xs font-mono text-slate-300">
-                            <!-- Dynamically filled -->
+                        <tbody id="clients-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs font-mono text-slate-700 dark:text-slate-300">
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 3: EINSTELLUNGEN (SETTINGS) -->
+        <!-- TAB 3: EINSTELLUNGEN -->
         <div id="tab-settings-content" class="hidden space-y-6">
-            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-6 shadow-xl space-y-6">
-                <div class="border-b border-slate-800 pb-4">
-                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-sliders text-emerald-400"></i>
-                        <span>Dashboard- & System-Konfiguration</span>
+            <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm space-y-6">
+                <div class="border-b border-slate-200 dark:border-slate-800 pb-4">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-emerald-500 dark:text-emerald-400"></i>
+                        <span>Dashboard- & System-Einstellungen</span>
                     </h3>
-                    <p class="text-xs text-slate-400 mt-1">Passe hier die Aktualisierungsintervalle, Alarmschwellen und Speicherparameter deines ChronyPi an.</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Hier kannst du Dashboard-Parameter anpassen und Befehle zur manuellen Chrony-Verwaltung einsehen.</p>
                 </div>
 
                 <form id="settings-form" onsubmit="saveSettings(event)" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Polling Interval -->
                         <div class="space-y-2">
-                            <label class="block text-xs font-mono uppercase tracking-wider text-slate-300">Dashboard Polling-Intervall (Sekunden)</label>
-                            <input type="number" id="setting-polling" name="polling_interval" min="1" max="60" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-emerald-500 transition font-mono" value="5">
-                            <p class="text-[11px] text-slate-500">Häufigkeit, mit der das Dashboard neue Telemetriedaten abruft.</p>
+                            <label class="block text-xs font-mono uppercase tracking-wider text-slate-700 dark:text-slate-300">Polling-Intervall (Sekunden)</label>
+                            <input type="number" id="setting-polling" min="1" max="60" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-800 dark:text-slate-200 font-mono" value="5">
                         </div>
 
-                        <!-- Offset Warning Threshold -->
                         <div class="space-y-2">
-                            <label class="block text-xs font-mono uppercase tracking-wider text-slate-300">Offset-Warnschwelle (Mikrosekunden µs)</label>
-                            <input type="number" step="0.1" id="setting-offset" name="warning_offset" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-emerald-500 transition font-mono" value="10.0">
-                            <p class="text-[11px] text-slate-500">Visuelle Warnung im Dashboard bei Überschreitung.</p>
-                        </div>
-
-                        <!-- Drift Warning Threshold -->
-                        <div class="space-y-2">
-                            <label class="block text-xs font-mono uppercase tracking-wider text-slate-300">Frequenz-Drift Warnschwelle (PPM)</label>
-                            <input type="number" step="0.1" id="setting-drift" name="warning_drift" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-emerald-500 transition font-mono" value="50.0">
-                            <p class="text-[11px] text-slate-500">Maximaler erlaubter Frequenzdrift.</p>
-                        </div>
-
-                        <!-- Retention Days -->
-                        <div class="space-y-2">
-                            <label class="block text-xs font-mono uppercase tracking-wider text-slate-300">Historie Speicherdauer (Tage)</label>
-                            <input type="number" id="setting-retention" name="retention_days" min="1" max="365" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-emerald-500 transition font-mono" value="30">
-                            <p class="text-[11px] text-slate-500">Aufbewahrungszeitraum in der SQLite-Datenbank.</p>
+                            <label class="block text-xs font-mono uppercase tracking-wider text-slate-700 dark:text-slate-300">Offset Warnschwelle (µs)</label>
+                            <input type="number" step="0.1" id="setting-offset" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-800 dark:text-slate-200 font-mono" value="10.0">
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-between pt-4 border-t border-slate-800">
-                        <div id="settings-save-status" class="text-xs text-emerald-400 font-mono hidden flex items-center gap-1.5">
-                            <i class="fa-solid fa-check-circle"></i> Einstellungen erfolgreich gespeichert!
-                        </div>
-                        <button type="submit" class="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-lg text-xs transition flex items-center gap-2 shadow-lg shadow-emerald-500/20 ml-auto">
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
+                        <button type="submit" class="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-lg text-xs transition flex items-center gap-2 shadow-md">
                             <i class="fa-solid fa-floppy-disk"></i>
                             <span>Einstellungen speichern</span>
                         </button>
                     </div>
                 </form>
+
+                <div class="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-3">
+                    <h4 class="text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">Manuelle Sudo-Befehle für SSH</h4>
+                    <div class="bg-slate-100 dark:bg-slate-950 p-4 rounded-lg font-mono text-xs text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 space-y-2">
+                        <p><span class="text-emerald-600 dark:text-emerald-400"># Chrony neu starten:</span> sudo systemctl restart chrony</p>
+                        <p><span class="text-emerald-600 dark:text-emerald-400"># Sofortige Zeitsynchronisation erzwingen:</span> sudo chronyc makestep</p>
+                        <p><span class="text-emerald-600 dark:text-emerald-400"># Konfiguration bearbeiten:</span> sudo nano /etc/chrony/chrony.conf</p>
+                    </div>
+                </div>
             </div>
         </div>
 
     </main>
 
-    <!-- BACKEND SETUP GUIDE MODAL -->
-    <div id="guide-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
-                <div class="flex items-center space-x-2 text-emerald-400">
-                    <i class="fa-solid fa-server"></i>
-                    <h3 class="font-bold text-white text-base">Raspberry Pi Backend Integration Guide</h3>
-                </div>
-                <button onclick="toggleGuideModal()" class="text-slate-400 hover:text-white p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <div class="p-6 overflow-y-auto space-y-4 text-sm text-slate-300">
-                <p>Das Dashboard verbindet sich automatisch mit dem lokalen Flask-Backend auf deinem Raspberry Pi.</p>
-                <pre class="bg-slate-950 p-3 rounded-lg text-xs font-mono text-emerald-300 border border-slate-800 overflow-x-auto">sudo systemctl restart chrony-dashboard.service</pre>
-            </div>
-
-            <div class="px-6 py-4 bg-slate-950 border-t border-slate-800 flex justify-end">
-                <button onclick="toggleGuideModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition">Schließen</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- JAVASCRIPT & DASHBOARD LOGIC -->
+    <!-- JAVASCRIPT LOGIC -->
     <script>
         let offsetChartInstance = null;
         let frequencyChartInstance = null;
         let cachedClients = [];
 
-        // Live Clock
         function startLiveClock() {
             setInterval(() => {
                 const now = new Date();
-                const utcStr = now.toISOString().split('T')[1].replace('Z', '') + ' UTC';
-                const localStr = 'Local: ' + now.toLocaleTimeString();
-                document.getElementById('utc-clock').innerText = utcStr;
-                document.getElementById('local-clock').innerText = localStr;
+                document.getElementById('utc-clock').innerText = now.toISOString().split('T')[1].replace('Z', '') + ' UTC';
+                document.getElementById('local-clock').innerText = 'Local: ' + now.toLocaleTimeString();
             }, 100);
         }
 
-        // Initialize Chart.js
         function initCharts() {
             const ctxOffset = document.getElementById('offsetChart').getContext('2d');
             offsetChartInstance = new Chart(ctxOffset, {
@@ -416,14 +326,12 @@
             });
         }
 
-        // Fetch Data from API
         async function fetchData() {
             try {
                 const res = await fetch('/api/chrony');
                 if (!res.ok) throw new Error('API Fehler');
                 const data = await res.json();
 
-                // KPIs update
                 const t = data.tracking || {};
                 document.getElementById('kpi-refid').innerText = t.reference_id || '-';
                 document.getElementById('kpi-offset').innerText = t.system_time || '-';
@@ -433,28 +341,25 @@
                 document.getElementById('kpi-rootdelay').innerText = t.root_delay || '-';
                 document.getElementById('kpi-dispersion').innerText = t.root_dispersion || '-';
 
-                // Sources Table
                 const sourcesBody = document.getElementById('sources-table-body');
                 sourcesBody.innerHTML = (data.sources || []).map(s => `
-                    <tr class="hover:bg-slate-900/80 transition">
-                        <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-slate-800 text-emerald-400 font-bold">${s.state}</span></td>
-                        <td class="py-3 px-4 font-bold text-white">${s.name}</td>
+                    <tr class="hover:bg-slate-100 dark:hover:bg-slate-900/80 transition">
+                        <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-bold">${s.state}</span></td>
+                        <td class="py-3 px-4 font-bold text-slate-800 dark:text-white">${s.name}</td>
                         <td class="py-3 px-4">Stratum ${s.stratum}</td>
                         <td class="py-3 px-4">${s.poll}</td>
-                        <td class="py-3 px-4 text-emerald-400">${s.reach}</td>
-                        <td class="py-3 px-4 text-slate-400">${s.last_rx}</td>
-                        <td class="py-3 px-4 text-emerald-400">${s.sample}</td>
+                        <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">${s.reach}</td>
+                        <td class="py-3 px-4 text-slate-500 dark:text-slate-400">${s.last_rx}</td>
+                        <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">${s.sample}</td>
                     </tr>
                 `).join('') || `<tr><td colspan="7" class="py-4 text-center text-slate-500">Keine Upstream-Quellen gefunden</td></tr>`;
 
-                // Clients Table
                 cachedClients = data.clients || [];
                 renderClients(cachedClients);
 
-                // History Charts
                 if (data.history && data.history.length > 0) {
                     const labels = data.history.map(h => h.timestamp.split('T')[1].split('.')[0]);
-                    const offsets = data.history.map(h => h.system_offset * 1000000); // in µs
+                    const offsets = data.history.map(h => h.system_offset * 1000000);
                     const freqs = data.history.map(h => h.frequency);
 
                     offsetChartInstance.data.labels = labels;
@@ -480,12 +385,12 @@
             tbody.innerHTML = clients.map(c => {
                 totalPackets += (c.ntp_packets || 0);
                 return `
-                    <tr class="hover:bg-slate-900/80 transition">
-                        <td class="py-3 px-4 font-bold text-white">${c.hostname} <span class="text-xs text-slate-500 font-normal">(${c.ip || ''})</span></td>
-                        <td class="py-3 px-4 text-slate-200">${c.ntp_packets}</td>
-                        <td class="py-3 px-4 text-amber-400">${c.drop_packets}</td>
-                        <td class="py-3 px-4 text-slate-400">${c.interval}</td>
-                        <td class="py-3 px-4 text-emerald-400">${c.last}</td>
+                    <tr class="hover:bg-slate-100 dark:hover:bg-slate-900/80 transition">
+                        <td class="py-3 px-4 font-bold text-slate-800 dark:text-white">${c.hostname}</td>
+                        <td class="py-3 px-4 text-slate-700 dark:text-slate-200">${c.ntp_packets}</td>
+                        <td class="py-3 px-4 text-amber-500 dark:text-amber-400">${c.drop_packets}</td>
+                        <td class="py-3 px-4 text-slate-500 dark:text-slate-400">${c.interval}</td>
+                        <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">${c.last}</td>
                     </tr>
                 `;
             }).join('') || `<tr><td colspan="5" class="py-4 text-center text-slate-500">Keine Clients verbunden</td></tr>`;
@@ -493,13 +398,18 @@
             document.getElementById('kpi-total-packets').innerText = totalPackets.toLocaleString();
         }
 
-        function filterClients() {
-            const query = document.getElementById('client-search-input').value.toLowerCase();
-            const filtered = cachedClients.filter(c => c.hostname.toLowerCase().includes(query));
-            renderClients(filtered);
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'fa-solid fa-sun';
+            } else {
+                html.classList.add('dark');
+                icon.className = 'fa-solid fa-moon';
+            }
         }
 
-        // Tab Switching
         function switchTab(tab) {
             const btnTracking = document.getElementById('tab-btn-tracking');
             const btnClients = document.getElementById('tab-btn-clients');
@@ -509,8 +419,8 @@
             const contentClients = document.getElementById('tab-clients-content');
             const contentSettings = document.getElementById('tab-settings-content');
 
-            const inactiveClass = "px-4 py-2 text-sm font-semibold rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent flex items-center gap-2 transition";
-            const activeClass = "px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-2 transition";
+            const inactiveClass = "px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition";
+            const activeClass = "px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-2 transition";
 
             btnTracking.className = inactiveClass;
             btnClients.className = inactiveClass;
@@ -540,8 +450,6 @@
                     const data = await res.json();
                     if (data.polling_interval) document.getElementById('setting-polling').value = data.polling_interval;
                     if (data.warning_offset) document.getElementById('setting-offset').value = data.warning_offset;
-                    if (data.warning_drift) document.getElementById('setting-drift').value = data.warning_drift;
-                    if (data.retention_days) document.getElementById('setting-retention').value = data.retention_days;
                 }
             } catch (e) {
                 console.warn('Einstellungen konnten nicht geladen werden.');
@@ -552,40 +460,18 @@
             event.preventDefault();
             const formData = {
                 polling_interval: document.getElementById('setting-polling').value,
-                warning_offset: document.getElementById('setting-offset').value,
-                warning_drift: document.getElementById('setting-drift').value,
-                retention_days: document.getElementById('setting-retention').value
+                warning_offset: document.getElementById('setting-offset').value
             };
 
             try {
-                const res = await fetch('/api/settings', {
+                await fetch('/api/settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
-                if (res.ok) {
-                    const statusEl = document.getElementById('settings-save-status');
-                    statusEl.classList.remove('hidden');
-                    setTimeout(() => statusEl.classList.add('hidden'), 4000);
-                }
+                alert('Einstellungen erfolgreich gespeichert!');
             } catch (e) {
                 alert('Fehler beim Speichern.');
-            }
-        }
-
-        function toggleGuideModal() {
-            document.getElementById('guide-modal').classList.toggle('hidden');
-        }
-
-        function toggleTheme() {
-            const html = document.documentElement;
-            const icon = document.getElementById('theme-icon');
-            if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                icon.className = 'fa-solid fa-sun';
-            } else {
-                html.classList.add('dark');
-                icon.className = 'fa-solid fa-moon';
             }
         }
 
