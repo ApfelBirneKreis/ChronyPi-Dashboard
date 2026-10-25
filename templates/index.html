@@ -287,7 +287,7 @@
                     </div>
 
                     <div id="settings-save-msg" class="hidden p-3 bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs rounded-lg font-mono">
-                        ✓ Einstellungen erfolgreich gespeichert!
+                        ✓ Einstellungen erfolgreich im Speicher übernommen!
                     </div>
 
                     <div class="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
@@ -441,35 +441,60 @@
                 const t = data.tracking || {};
                 document.getElementById('kpi-refid').innerText = t.reference_id || '-';
                 document.getElementById('kpi-refname').innerText = t.reference_name || t.reference_id || 'System Clock Source';
-                document.getElementById('kpi-offset').innerText = t.system_time || '-';
+                
+                // Offset sauber formatieren (in Mikro sekunden µs wie im Design-Beispiel)
+                let rawTime = t.system_time || '0';
+                let formattedOffset = '-';
+                if (rawTime !== '-') {
+                    let match = rawTime.match(/([0-9.-]+)\s*seconds?/);
+                    if (match) {
+                        let sec = parseFloat(match[1]);
+                        let us = sec * 1000000;
+                        let sign = rawTime.includes('slow') ? '-' : '+';
+                        formattedOffset = `${sign}${Math.abs(us).toFixed(2)} µs`;
+                    } else {
+                        formattedOffset = rawTime;
+                    }
+                }
+                document.getElementById('kpi-offset').innerText = formattedOffset;
                 document.getElementById('kpi-rms').innerText = t.rms_offset || '-';
                 document.getElementById('kpi-stratum').innerText = t.stratum ? `Stratum ${t.stratum}` : '-';
                 document.getElementById('kpi-freq').innerText = t.frequency ? `${t.frequency} ppm` : '-';
                 document.getElementById('kpi-rootdelay').innerText = t.root_delay || '-';
                 document.getElementById('kpi-dispersion').innerText = t.root_dispersion || '-';
 
-                // Quellen Tabelle aktualisieren
+                // Upstream Sources mit exakten Status-Badges mappen (* Selected, + Combined)
                 const sourcesBody = document.getElementById('sources-table-body');
-                sourcesBody.innerHTML = (data.sources || []).map(s => `
-                    <tr class="hover:bg-slate-100 dark:hover:bg-slate-900/80 transition">
-                        <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">${s.state}</span></td>
-                        <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">${s.name}</td>
-                        <td class="py-3 px-4">Stratum ${s.stratum}</td>
-                        <td class="py-3 px-4">${s.poll}</td>
-                        <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">${s.reach}</td>
-                        <td class="py-3 px-4 text-slate-500 dark:text-slate-400">${s.last_rx}</td>
-                        <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">${s.sample}</td>
-                    </tr>
-                `).join('') || `<tr><td colspan="7" class="py-4 text-center text-slate-500">Keine Upstream-Quellen gefunden</td></tr>`;
+                sourcesBody.innerHTML = (data.sources || []).map(s => {
+                    let rawState = s.state.replace('^', '');
+                    let badgeHtml = '';
+                    if (rawState.includes('*')) {
+                        badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">* Selected</span>';
+                    } else if (rawState.includes('+')) {
+                        badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-800">+ Combined</span>';
+                    } else {
+                        badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${s.state}</span>`;
+                    }
 
-                // Clients Tabelle aktualisieren
+                    return `
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                            <td class="py-3 px-4">${badgeHtml}</td>
+                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${s.name}</td>
+                            <td class="py-3 px-4">Stratum ${s.stratum}</td>
+                            <td class="py-3 px-4">${s.poll}</td>
+                            <td class="py-3 px-4">${s.reach}</td>
+                            <td class="py-3 px-4">${s.last_rx}</td>
+                            <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">${s.sample}</td>
+                        </tr>
+                    `;
+                }).join('') || `<tr><td colspan="7" class="py-4 text-center text-slate-500">Keine Upstream-Quellen gefunden</td></tr>`;
+
                 cachedClients = data.clients || [];
                 renderClients(cachedClients);
 
-                // Historische Charts aktualisieren
                 if (data.history && data.history.length > 0) {
                     const labels = data.history.map(h => h.timestamp.split('T')[1].split('.')[0]);
-                    const offsets = data.history.map(h => h.system_offset * 1000000); // in Microseconds
+                    const offsets = data.history.map(h => h.system_offset * 1000000);
                     const freqs = data.history.map(h => h.frequency);
 
                     offsetChartInstance.data.labels = labels;
@@ -495,12 +520,12 @@
             tbody.innerHTML = clients.map(c => {
                 totalPackets += (c.ntp_packets || 0);
                 return `
-                    <tr class="hover:bg-slate-100 dark:hover:bg-slate-900/80 transition">
-                        <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">${c.hostname}</td>
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                        <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${c.hostname}</td>
                         <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">${c.ntp_packets.toLocaleString()}</td>
-                        <td class="py-3 px-4 text-amber-500 dark:text-amber-400">${c.drop_packets}</td>
-                        <td class="py-3 px-4 text-slate-500 dark:text-slate-400">${c.interval}</td>
-                        <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">${c.last}</td>
+                        <td class="py-3 px-4 text-slate-400">${c.drop_packets}</td>
+                        <td class="py-3 px-4">${c.interval}</td>
+                        <td class="py-3 px-4">${c.last}</td>
                     </tr>
                 `;
             }).join('') || `<tr><td colspan="5" class="py-4 text-center text-slate-500">Keine Clients verbunden</td></tr>`;
@@ -546,7 +571,7 @@
             startLiveClock();
             initCharts();
             fetchData();
-            setInterval(fetchData, 5000); // Alle 5 Sekunden Live-Daten abrufen
+            setInterval(fetchData, 5000);
         };
     </script>
 </body>
