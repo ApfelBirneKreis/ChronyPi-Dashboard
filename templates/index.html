@@ -68,7 +68,7 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <h1 class="text-lg font-bold text-slate-900 dark:text-white tracking-wide">Chrony<span class="text-emerald-500 dark:text-emerald-400">Pi</span></h1>
-                            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-mono">v2.4-combined</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-mono">v2.5-sources</span>
                         </div>
                         <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Raspberry Pi Time Server & Client Telemetry</p>
                     </div>
@@ -258,6 +258,7 @@
                         <thead>
                             <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs font-mono uppercase bg-slate-50 dark:bg-slate-950/40">
                                 <th class="py-3 px-4">State</th>
+                                <th class="py-3 px-4">Typ</th>
                                 <th class="py-3 px-4">Name / IP Address</th>
                                 <th class="py-3 px-4">Stratum</th>
                                 <th class="py-3 px-4">Poll</th>
@@ -267,7 +268,7 @@
                             </tr>
                         </thead>
                         <tbody id="sources-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono text-xs text-slate-700 dark:text-slate-300">
-                            <tr><td colspan="7" class="py-4 text-center text-slate-500">Lade Upstream-Quellen...</td></tr>
+                            <tr><td colspan="8" class="py-4 text-center text-slate-500">Lade Upstream-Quellen...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -360,6 +361,12 @@
                         </div>
                     </div>
 
+                    <!-- Toggle for invalid sources -->
+                    <div class="flex items-center space-x-3 pt-2">
+                        <input type="checkbox" id="setting-show-invalid" class="w-4 h-4 text-emerald-600 bg-slate-100 border-slate-300 rounded focus:ring-emerald-500 dark:focus:ring-emerald-600 dark:ring-offset-slate-900 focus:ring-2 dark:bg-slate-950 dark:border-slate-800">
+                        <label for="setting-show-invalid" class="text-xs font-mono text-slate-700 dark:text-slate-300">Ungültige / inaktive Quellen in Tabelle anzeigen</label>
+                    </div>
+
                     <div id="settings-save-msg" class="hidden p-3 bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs rounded-lg font-mono">
                         ✓ Einstellungen erfolgreich im Speicher übernommen!
                     </div>
@@ -421,6 +428,8 @@
         let offsetChartInstance = null;
         let frequencyChartInstance = null;
         let cachedClients = [];
+        let cachedSources = [];
+        let showInvalidSources = false;
 
         function startLiveClock() {
             setInterval(() => {
@@ -555,6 +564,54 @@
             }
         }
 
+        function renderSources(sources) {
+            const sourcesBody = document.getElementById('sources-table-body');
+            
+            // Filtern basierend auf der Einstellung
+            const filteredSources = sources.filter(s => showInvalidSources || s.is_valid);
+
+            sourcesBody.innerHTML = filteredSources.map(s => {
+                let rawState = s.state;
+                let badgeHtml = '';
+                
+                if (rawState.includes('*')) {
+                    badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800"><i class="fa-solid fa-check mr-1"></i>* Selected</span>';
+                } else if (rawState.includes('+')) {
+                    badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-800"><i class="fa-solid fa-plus mr-1"></i>+ Combined</span>';
+                } else if (rawState.includes('-')) {
+                    badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700">- Unselected</span>';
+                } else if (rawState.includes('?')) {
+                    badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-400 border border-rose-300 dark:border-rose-800"><i class="fa-solid fa-triangle-exclamation mr-1"></i>? Unreachable</span>';
+                } else if (rawState.includes('x')) {
+                    badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800"><i class="fa-solid fa-xmark mr-1"></i>x Falseticker</span>';
+                } else {
+                    badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${s.state}</span>`;
+                }
+
+                let typeBadge = '';
+                if (s.type.includes('GPS')) {
+                    typeBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-400 border border-cyan-300 dark:border-cyan-800"><i class="fa-solid fa-location-crosshairs mr-1"></i>GPS / Local</span>';
+                } else if (s.type.includes('Peer')) {
+                    typeBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-400 border border-purple-300 dark:border-purple-800"><i class="fa-solid fa-network-wired mr-1"></i>Peer</span>';
+                } else {
+                    typeBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800"><i class="fa-solid fa-globe mr-1"></i>NTP / NTS</span>';
+                }
+
+                return `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                        <td class="py-3 px-4">${badgeHtml}</td>
+                        <td class="py-3 px-4">${typeBadge}</td>
+                        <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${s.name}</td>
+                        <td class="py-3 px-4">Stratum ${s.stratum}</td>
+                        <td class="py-3 px-4">${s.poll}</td>
+                        <td class="py-3 px-4">${s.reach}</td>
+                        <td class="py-3 px-4">${s.last_rx}</td>
+                        <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">${s.sample}</td>
+                    </tr>
+                `;
+            }).join('') || `<tr><td colspan="8" class="py-4 text-center text-slate-500">Keine passenden Upstream-Quellen gefunden</td></tr>`;
+        }
+
         async function fetchData() {
             try {
                 const res = await fetch('/api/chrony');
@@ -563,10 +620,8 @@
 
                 const t = data.tracking || {};
                 
-                // Synchronisations-Badge dynamisch aktualisieren
                 updateSyncBadge(data.is_synced);
 
-                // System Status in Einstellungen aktualisieren
                 if (document.getElementById('stat-db-size')) {
                     document.getElementById('stat-db-size').innerText = data.db_size || "0 KB";
                     
@@ -624,30 +679,8 @@
                     document.getElementById('stat-72-freq').innerText = `${s72.min_freq.toFixed(2)} / ${s72.max_freq.toFixed(2)} ppm`;
                 }
 
-                const sourcesBody = document.getElementById('sources-table-body');
-                sourcesBody.innerHTML = (data.sources || []).map(s => {
-                    let rawState = s.state.replace('^', '');
-                    let badgeHtml = '';
-                    if (rawState.includes('*')) {
-                        badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">* Selected</span>';
-                    } else if (rawState.includes('+')) {
-                        badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-800">+ Combined</span>';
-                    } else {
-                        badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${s.state}</span>`;
-                    }
-
-                    return `
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                            <td class="py-3 px-4">${badgeHtml}</td>
-                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${s.name}</td>
-                            <td class="py-3 px-4">Stratum ${s.stratum}</td>
-                            <td class="py-3 px-4">${s.poll}</td>
-                            <td class="py-3 px-4">${s.reach}</td>
-                            <td class="py-3 px-4">${s.last_rx}</td>
-                            <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">${s.sample}</td>
-                        </tr>
-                    `;
-                }).join('') || `<tr><td colspan="7" class="py-4 text-center text-slate-500">Keine Upstream-Quellen gefunden</td></tr>`;
+                cachedSources = data.sources || [];
+                renderSources(cachedSources);
 
                 cachedClients = data.clients || [];
                 renderClients(cachedClients);
@@ -716,6 +749,10 @@
                     const data = await res.json();
                     if (data.polling_interval) document.getElementById('setting-polling').value = data.polling_interval;
                     if (data.warning_offset) document.getElementById('setting-offset').value = data.warning_offset;
+                    if (data.show_invalid_sources) {
+                        showInvalidSources = data.show_invalid_sources === 'true';
+                        document.getElementById('setting-show-invalid').checked = showInvalidSources;
+                    }
                 }
             } catch (e) {
                 console.warn('Einstellungen konnten nicht geladen werden.');
@@ -724,9 +761,11 @@
 
         async function saveSettings(e) {
             e.preventDefault();
+            showInvalidSources = document.getElementById('setting-show-invalid').checked;
             const formData = {
                 polling_interval: document.getElementById('setting-polling').value,
-                warning_offset: document.getElementById('setting-offset').value
+                warning_offset: document.getElementById('setting-offset').value,
+                show_invalid_sources: showInvalidSources ? 'true' : 'false'
             };
 
             try {
@@ -735,6 +774,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
+                renderSources(cachedSources);
                 const msgBox = document.getElementById('settings-save-msg');
                 msgBox.classList.remove('hidden');
                 setTimeout(() => msgBox.classList.add('hidden'), 3000);
@@ -746,7 +786,7 @@
         window.onload = function() {
             startLiveClock();
             initCharts();
-            fetchData();
+            loadSettings().then(() => fetchData());
             setInterval(fetchData, 5000);
         };
     </script>
