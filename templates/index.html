@@ -25,8 +25,8 @@
             }
         }
     </script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- FontAwesome Icons (v6.5.2 CDN) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -60,17 +60,19 @@
     <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <!-- Brand Title -->
+                <!-- Brand Title & Atom Logo (Ausfallsicheres Inline SVG) -->
                 <div class="flex items-center space-x-3">
-                    <div class="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-600 dark:text-emerald-400">
-                        <i class="fa-solid font-mono text-xl fa-clock"></i>
+                    <div class="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 dark:text-emerald-400 shadow-inner flex items-center justify-center">
+                        <svg class="w-6 h-6 fill-current text-emerald-500 dark:text-emerald-400" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M256 0c-23.7 0-44.8 14.1-54.1 35.8l-3.9 9.1c-14.7 34.3-13.8 73.6 2.5 107.2C182.2 169.5 160 196.2 160 228c0 14.7 4.9 28.3 13.2 39.2c-29 27.6-67.6 44.8-110.2 44.8C28.2 312 0 340.2 0 375c0 14.1 4.6 27.3 12.5 38c-8 10.7-12.5 23.9-12.5 38c0 34.8 28.2 63 63 63c42.6 0 81.2-17.2 110.2-44.8c10.9 8.3 24.5 13.2 39.2 13.2c31.8 0 58.5-22.2 65.9-52.1c33.6 16.3 72.9 17.2 107.2 2.5l9.1-3.9c21.7-9.3 35.8-30.4 35.8-54.1c0-23.7-14.1-44.8-35.8-54.1l-9.1-3.9c-34.3-14.7-73.6-13.8-107.2 2.5c-7.4-29.9-34.1-52.1-65.9-52.1c-14.7 0-28.3 4.9-39.2 13.2c-27.6-29-44.8-67.6-44.8-110.2c0-34.8 28.2-63 63-63c14.1 0 27.3 4.6 38 12.5c10.7-8 23.9-12.5 38-12.5c34.8 0 63 28.2 63 63c0 42.6-17.2 81.2-44.8 110.2c8.3 10.9 13.2 24.5 13.2 39.2c0 31.8-22.2 58.5-52.1 65.9c16.3 33.6 17.2 72.9 2.5 107.2l-3.9 9.1c-9.3 21.7-30.4 35.8-54.1 35.8zM256 208a48 48 0 1 1 0 96 48 48 0 1 1 0-96z"/>
+                        </svg>
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
                             <h1 class="text-lg font-bold text-slate-900 dark:text-white tracking-wide">Chrony<span class="text-emerald-500 dark:text-emerald-400">Pi</span></h1>
-                            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-mono">v2.4-combined</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-mono">v2.9-svg</span>
                         </div>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Raspberry Pi Time Server & Client Telemetry</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Raspberry Pi Time Server & Telemetry</p>
                     </div>
                 </div>
 
@@ -81,10 +83,11 @@
                         <span id="local-clock" class="text-[10px] font-mono text-slate-500 dark:text-slate-400">Local: --:--:--</span>
                     </div>
 
-                    <div class="flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800/50 space-x-2">
+                    <!-- Dynamic Synchronized Status Badge -->
+                    <div id="sync-badge" class="flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800/50 space-x-2 transition-colors">
                         <span class="relative flex h-2.5 w-2.5">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                          <span id="sync-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span id="sync-dot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                         </span>
                         <span id="sync-status">SYNCHRONIZED</span>
                     </div>
@@ -139,15 +142,15 @@
                 </div>
             </div>
 
-            <!-- Root Delay -->
+            <!-- Pi Temperature -->
             <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition shadow-sm">
                 <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs">
-                    <span>Root Delay / Dispersion</span>
-                    <i class="fa-solid fa-network-wired text-amber-500 dark:text-amber-400"></i>
+                    <span>Pi SoC Temp</span>
+                    <i class="fa-solid fa-temperature-half text-rose-500 dark:text-rose-400"></i>
                 </div>
                 <div class="mt-2">
-                    <div id="kpi-rootdelay" class="text-lg font-bold font-mono text-amber-600 dark:text-amber-300">-</div>
-                    <div class="text-xs text-slate-500 dark:text-slate-400">Dispersion: <span id="kpi-dispersion" class="font-mono text-slate-700 dark:text-slate-300">-</span></div>
+                    <div id="kpi-temp" class="text-xl font-bold font-mono text-rose-600 dark:text-rose-400">- °C</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400">Skew: <span id="kpi-skew" class="font-mono text-slate-700 dark:text-slate-300">-</span></div>
                 </div>
             </div>
 
@@ -165,17 +168,21 @@
         </div>
 
         <!-- DASHBOARD TAB NAVIGATION -->
-        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
             <nav class="flex space-x-2" aria-label="Tabs">
-                <button id="tab-btn-tracking" onclick="switchTab('tracking')" class="px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-2 transition">
+                <button id="tab-btn-tracking" onclick="switchTab('tracking')" class="px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-2 transition whitespace-nowrap">
                     <i class="fa-solid fa-chart-line"></i>
-                    <span>Tracking & History (Time-Pi)</span>
+                    <span>Tracking & History</span>
                 </button>
-                <button id="tab-btn-clients" onclick="switchTab('clients')" class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition">
+                <button id="tab-btn-kpi" onclick="switchTab('kpi')" class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition whitespace-nowrap">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>System-Telemetrie & KPIs</span>
+                </button>
+                <button id="tab-btn-clients" onclick="switchTab('clients')" class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition whitespace-nowrap">
                     <i class="fa-solid fa-users-viewfinder"></i>
-                    <span>Client Monitoring (TICC-DASH)</span>
+                    <span>Client Monitoring</span>
                 </button>
-                <button id="tab-btn-settings" onclick="switchTab('settings')" class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition">
+                <button id="tab-btn-settings" onclick="switchTab('settings')" class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition whitespace-nowrap">
                     <i class="fa-solid fa-gear"></i>
                     <span>Einstellungen</span>
                 </button>
@@ -190,7 +197,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <div>
                             <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">System Clock Offset</h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">Abweichung von der Referenzzeit (Microseconds µs)</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Abweichung von der Referenzzeit (ns / µs)</p>
                         </div>
                     </div>
                     <div class="relative h-64 w-full flex-1">
@@ -212,6 +219,43 @@
                 </div>
             </div>
 
+            <!-- Min/Max Historical Statistics (24h & 72h) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                        <h4 class="text-xs font-mono uppercase tracking-wider text-slate-700 dark:text-slate-300 font-bold"><i class="fa-solid fa-clock-rotate-left text-emerald-500 mr-2"></i>24-Stunden Statistiken</h4>
+                        <span class="text-[10px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded">Letzte 24h</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 font-mono text-xs">
+                        <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                            <span class="text-slate-500 block text-[10px]">Offset Min / Max</span>
+                            <span id="stat-24-offset" class="text-slate-800 dark:text-slate-200 font-bold">- / -</span>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                            <span class="text-slate-500 block text-[10px]">Drift Min / Max</span>
+                            <span id="stat-24-freq" class="text-slate-800 dark:text-slate-200 font-bold">- / -</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                        <h4 class="text-xs font-mono uppercase tracking-wider text-slate-700 dark:text-slate-300 font-bold"><i class="fa-solid fa-calendar-days text-cyan-500 mr-2"></i>72-Stunden Statistiken</h4>
+                        <span class="text-[10px] font-mono bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 px-2 py-0.5 rounded">Letzte 72h</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 font-mono text-xs">
+                        <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                            <span class="text-slate-500 block text-[10px]">Offset Min / Max</span>
+                            <span id="stat-72-offset" class="text-slate-800 dark:text-slate-200 font-bold">- / -</span>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                            <span class="text-slate-500 block text-[10px]">Drift Min / Max</span>
+                            <span id="stat-72-freq" class="text-slate-800 dark:text-slate-200 font-bold">- / -</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Upstream Sources Table -->
             <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
                 <h3 class="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">Active Upstream NTP Sources (`chronyc sources`)</h3>
@@ -220,6 +264,7 @@
                         <thead>
                             <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs font-mono uppercase bg-slate-50 dark:bg-slate-950/40">
                                 <th class="py-3 px-4">State</th>
+                                <th class="py-3 px-4">Typ</th>
                                 <th class="py-3 px-4">Name / IP Address</th>
                                 <th class="py-3 px-4">Stratum</th>
                                 <th class="py-3 px-4">Poll</th>
@@ -229,14 +274,45 @@
                             </tr>
                         </thead>
                         <tbody id="sources-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono text-xs text-slate-700 dark:text-slate-300">
-                            <tr><td colspan="7" class="py-4 text-center text-slate-500">Lade Upstream-Quellen...</td></tr>
+                            <tr><td colspan="8" class="py-4 text-center text-slate-500">Lade Upstream-Quellen...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 2: CONNECTED CLIENTS DASHBOARD -->
+        <!-- TAB 2: KPI & SYSTEM TELEMETRY -->
+        <div id="tab-kpi-content" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Temperature Chart -->
+                <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Raspberry Pi SoC Temperatur</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Prozessor- und Platinentemperatur in °C</p>
+                        </div>
+                    </div>
+                    <div class="relative h-64 w-full flex-1">
+                        <canvas id="tempChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Skew & Residual Freq Chart -->
+                <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Erweiterte Metriken (Skew & Residual)</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Fehlerungenauigkeit (Skew) und Restdrift in ppm</p>
+                        </div>
+                    </div>
+                    <div class="relative h-64 w-full flex-1">
+                        <canvas id="metricsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: CONNECTED CLIENTS DASHBOARD -->
         <div id="tab-clients-content" class="hidden space-y-6">
             <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
                 <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
@@ -262,15 +338,51 @@
             </div>
         </div>
 
-        <!-- TAB 3: EINSTELLUNGEN -->
+        <!-- TAB 4: EINSTELLUNGEN & SYSTEM STATUS -->
         <div id="tab-settings-content" class="hidden space-y-6">
+            
+            <!-- Live Status Overview Box -->
+            <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm space-y-4">
+                <div class="border-b border-slate-200 dark:border-slate-800 pb-3 flex items-center justify-between">
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-heart-pulse text-emerald-500"></i>
+                        <span>Chrony Service & Datenbank Status</span>
+                    </h3>
+                    <span id="sys-status-badge" class="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">SYSTEM ONLINE</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
+                    <div class="bg-slate-50 dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800 space-y-1">
+                        <span class="text-slate-500 text-[10px] uppercase tracking-wider block">Chrony Daemon Status</span>
+                        <div class="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
+                            <span id="stat-daemon-dot" class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+                            <span id="stat-daemon-text">Erreichbar (`chronyc alive`)</span>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800 space-y-1">
+                        <span class="text-slate-500 text-[10px] uppercase tracking-wider block">Upstream Zeitsynchronisation</span>
+                        <div class="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
+                            <span id="stat-sync-dot" class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+                            <span id="stat-sync-text">Locked / Sync</span>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800 space-y-1">
+                        <span class="text-slate-500 text-[10px] uppercase tracking-wider block">Datenbank-Größe (.db)</span>
+                        <div class="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
+                            <i class="fa-solid fa-database text-cyan-500"></i>
+                            <span id="stat-db-size">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Form -->
             <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm space-y-6">
                 <div class="border-b border-slate-200 dark:border-slate-800 pb-4">
                     <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <i class="fa-solid fa-sliders text-emerald-500 dark:text-emerald-400"></i>
                         <span>Dashboard- & System-Einstellungen</span>
                     </h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Hier kannst du Dashboard-Parameter anpassen und Befehle zur manuellen Chrony-Verwaltung einsehen.</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Hier kannst du Dashboard-Parameter anpassen, Daten exportieren und Befehle zur manuellen Chrony-Verwaltung einsehen.</p>
                 </div>
 
                 <form id="settings-form" onsubmit="saveSettings(event)" class="space-y-6">
@@ -286,6 +398,12 @@
                         </div>
                     </div>
 
+                    <!-- Toggle for invalid sources -->
+                    <div class="flex items-center space-x-3 pt-2">
+                        <input type="checkbox" id="setting-show-invalid" class="w-4 h-4 text-emerald-600 bg-slate-100 border-slate-300 rounded focus:ring-emerald-500 dark:focus:ring-emerald-600 dark:ring-offset-slate-900 focus:ring-2 dark:bg-slate-950 dark:border-slate-800">
+                        <label for="setting-show-invalid" class="text-xs font-mono text-slate-700 dark:text-slate-300">Ungültige / inaktive Quellen in Tabelle anzeigen</label>
+                    </div>
+
                     <div id="settings-save-msg" class="hidden p-3 bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs rounded-lg font-mono">
                         ✓ Einstellungen erfolgreich im Speicher übernommen!
                     </div>
@@ -297,6 +415,36 @@
                         </button>
                     </div>
                 </form>
+
+                <!-- CSV Export Section -->
+                <div class="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-3">
+                    <h4 class="text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">Daten-Export (CSV)</h4>
+                    <div class="flex items-center justify-between bg-slate-100 dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
+                        <div>
+                            <p class="text-sm font-bold text-slate-800 dark:text-slate-200">Historie als CSV herunterladen</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Exportiert alle gespeicherten Messwerte (Timestamp, Offset, Drift, Temp, Skew).</p>
+                        </div>
+                        <a href="/api/export/csv" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold rounded-lg text-xs transition flex items-center gap-2 shadow-md">
+                            <i class="fa-solid fa-file-csv text-sm"></i>
+                            <span>CSV Exportieren</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Reset Statistics Section -->
+                <div class="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-3">
+                    <h4 class="text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">Datenbank & Statistiken zurücksetzen</h4>
+                    <div class="flex items-center justify-between bg-slate-100 dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
+                        <div>
+                            <p class="text-sm font-bold text-slate-800 dark:text-slate-200">Statistiken-Historie löschen</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Setzt alle gesammelten Messwerte und Diagrammdaten zurück.</p>
+                        </div>
+                        <button onclick="resetHistory()" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg text-xs transition flex items-center gap-2 shadow-md">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                            <span>Statistik zurücksetzen</span>
+                        </button>
+                    </div>
+                </div>
 
                 <!-- Information Section for Manual Commands -->
                 <div class="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-3">
@@ -316,7 +464,12 @@
     <script>
         let offsetChartInstance = null;
         let frequencyChartInstance = null;
+        let tempChartInstance = null;
+        let metricsChartInstance = null;
+        
         let cachedClients = [];
+        let cachedSources = [];
+        let showInvalidSources = false;
 
         function startLiveClock() {
             setInterval(() => {
@@ -341,33 +494,40 @@
 
         function switchTab(tab) {
             const btnTracking = document.getElementById('tab-btn-tracking');
+            const btnKpi = document.getElementById('tab-btn-kpi');
             const btnClients = document.getElementById('tab-btn-clients');
             const btnSettings = document.getElementById('tab-btn-settings');
             
             const contentTracking = document.getElementById('tab-tracking-content');
+            const contentKpi = document.getElementById('tab-kpi-content');
             const contentClients = document.getElementById('tab-clients-content');
             const contentSettings = document.getElementById('tab-settings-content');
 
-            const inactiveClass = "px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition";
-            const activeClass = "px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-2 transition";
+            const inactiveClass = "px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition whitespace-nowrap";
+            const activeClass = "px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-2 transition whitespace-nowrap";
 
-            btnTracking.className = inactiveClass;
-            btnClients.className = inactiveClass;
-            btnSettings.className = inactiveClass;
+            if (btnTracking) btnTracking.className = inactiveClass;
+            if (btnKpi) btnKpi.className = inactiveClass;
+            if (btnClients) btnClients.className = inactiveClass;
+            if (btnSettings) btnSettings.className = inactiveClass;
 
-            contentTracking.classList.add('hidden');
-            contentClients.classList.add('hidden');
-            contentSettings.classList.add('hidden');
+            if (contentTracking) contentTracking.classList.add('hidden');
+            if (contentKpi) contentKpi.classList.add('hidden');
+            if (contentClients) contentClients.classList.add('hidden');
+            if (contentSettings) contentSettings.classList.add('hidden');
 
             if (tab === 'tracking') {
-                contentTracking.classList.remove('hidden');
-                btnTracking.className = activeClass;
+                if (contentTracking) contentTracking.classList.remove('hidden');
+                if (btnTracking) btnTracking.className = activeClass;
+            } else if (tab === 'kpi') {
+                if (contentKpi) contentKpi.classList.remove('hidden');
+                if (btnKpi) btnKpi.className = activeClass;
             } else if (tab === 'clients') {
-                contentClients.classList.remove('hidden');
-                btnClients.className = activeClass;
+                if (contentClients) contentClients.classList.remove('hidden');
+                if (btnClients) btnClients.className = activeClass;
             } else if (tab === 'settings') {
-                contentSettings.classList.remove('hidden');
-                btnSettings.className = activeClass;
+                if (contentSettings) contentSettings.classList.remove('hidden');
+                if (btnSettings) btnSettings.className = activeClass;
                 loadSettings();
             }
         }
@@ -377,59 +537,128 @@
             const textColor = isDark ? '#94a3b8' : '#475569';
             const gridColor = isDark ? 'rgba(51, 65, 85, 0.3)' : 'rgba(226, 232, 240, 0.8)';
 
+            // Offset Chart
             if (offsetChartInstance) offsetChartInstance.destroy();
-            const ctxOffset = document.getElementById('offsetChart').getContext('2d');
-            offsetChartInstance = new Chart(ctxOffset, {
+            offsetChartInstance = new Chart(document.getElementById('offsetChart').getContext('2d'), {
                 type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Offset (µs)',
-                        data: [],
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        fill: true,
-                        tension: 0.35,
-                        pointRadius: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { ticks: { color: textColor, maxTicksLimit: 8 }, grid: { color: gridColor } },
-                        y: { ticks: { color: textColor }, grid: { color: gridColor } }
-                    }
-                }
+                data: { labels: [], datasets: [{ label: 'Offset', data: [], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.35, pointRadius: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: textColor, maxTicksLimit: 8 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } } }
             });
 
+            // Frequency Drift Chart
             if (frequencyChartInstance) frequencyChartInstance.destroy();
-            const ctxFreq = document.getElementById('frequencyChart').getContext('2d');
-            frequencyChartInstance = new Chart(ctxFreq, {
+            frequencyChartInstance = new Chart(document.getElementById('frequencyChart').getContext('2d'), {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Drift (ppm)', data: [], borderColor: '#06b6d4', backgroundColor: 'rgba(6, 182, 212, 0.1)', fill: true, tension: 0.35, pointRadius: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: textColor, maxTicksLimit: 8 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } } }
+            });
+
+            // Temperature Chart
+            if (tempChartInstance) tempChartInstance.destroy();
+            tempChartInstance = new Chart(document.getElementById('tempChart').getContext('2d'), {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'SoC Temp (°C)', data: [], borderColor: '#f43f5e', backgroundColor: 'rgba(244, 63, 94, 0.1)', fill: true, tension: 0.35, pointRadius: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: textColor, maxTicksLimit: 8 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } } }
+            });
+
+            // Metrics Chart (Skew & Residual)
+            if (metricsChartInstance) metricsChartInstance.destroy();
+            metricsChartInstance = new Chart(document.getElementById('metricsChart').getContext('2d'), {
                 type: 'line',
                 data: {
                     labels: [],
-                    datasets: [{
-                        label: 'Drift (ppm)',
-                        data: [],
-                        borderColor: '#06b6d4',
-                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                        fill: true,
-                        tension: 0.35,
-                        pointRadius: 2
-                    }]
+                    datasets: [
+                        { label: 'Skew (ppm)', data: [], borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.1)', fill: false, tension: 0.35, pointRadius: 2 },
+                        { label: 'Residual Freq (ppm)', data: [], borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: false, tension: 0.35, pointRadius: 2 }
+                    ]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { ticks: { color: textColor, maxTicksLimit: 8 }, grid: { color: gridColor } },
-                        y: { ticks: { color: textColor }, grid: { color: gridColor } }
-                    }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { color: textColor } } }, scales: { x: { ticks: { color: textColor, maxTicksLimit: 8 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } } }
             });
+        }
+
+        function formatOffset(sec) {
+            let us = sec * 1000000;
+            let sign = us < 0 ? '-' : '+';
+            let absUs = Math.abs(us);
+            if (absUs < 1 && absUs !== 0) {
+                let ns = absUs * 1000;
+                return `${sign}${ns.toFixed(1)} ns`;
+            }
+            return `${sign}${absUs.toFixed(2)} µs`;
+        }
+
+        function formatStatOffset(valUs) {
+            let absVal = Math.abs(valUs);
+            let sign = valUs < 0 ? '-' : '';
+            if (absVal < 1 && absVal !== 0) {
+                return `${sign}${(absVal * 1000).toFixed(1)} ns`;
+            }
+            return `${valUs.toFixed(2)} µs`;
+        }
+
+        function updateSyncBadge(isSynced) {
+            const badge = document.getElementById('sync-badge');
+            const ping = document.getElementById('sync-ping');
+            const dot = document.getElementById('sync-dot');
+            const text = document.getElementById('sync-status');
+
+            if (isSynced) {
+                badge.className = "flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800/50 space-x-2 transition-colors";
+                ping.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+                dot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500";
+                text.innerText = "SYNCHRONIZED";
+            } else {
+                badge.className = "flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-300 dark:border-rose-800/50 space-x-2 transition-colors";
+                ping.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75";
+                dot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500";
+                text.innerText = "UNSYNCHRONIZED";
+            }
+        }
+
+        function renderSources(sources) {
+            const sourcesBody = document.getElementById('sources-table-body');
+            const filteredSources = sources.filter(s => showInvalidSources || s.is_valid);
+
+            sourcesBody.innerHTML = filteredSources.map(s => {
+                let rawState = s.state;
+                let badgeHtml = '';
+                
+                if (rawState.includes('*')) {
+                    badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800"><i class="fa-solid fa-check mr-1"></i>* Selected</span>';
+                } else if (rawState.includes('+')) {
+                    badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-800"><i class="fa-solid fa-plus mr-1"></i>+ Combined</span>';
+                } else if (rawState.includes('-')) {
+                    badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700">- Unselected</span>';
+                } else if (rawState.includes('?')) {
+                    badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-400 border border-rose-300 dark:border-rose-800"><i class="fa-solid fa-triangle-exclamation mr-1"></i>? Unreachable</span>';
+                } else if (rawState.includes('x')) {
+                    badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800"><i class="fa-solid fa-xmark mr-1"></i>x Falseticker</span>';
+                } else {
+                    badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${s.state}</span>`;
+                }
+
+                let typeBadge = '';
+                if (s.type.includes('GPS')) {
+                    typeBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-400 border border-cyan-300 dark:border-cyan-800"><i class="fa-solid fa-location-crosshairs mr-1"></i>GPS / Local</span>';
+                } else if (s.type.includes('Peer')) {
+                    typeBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-400 border border-purple-300 dark:border-purple-800"><i class="fa-solid fa-network-wired mr-1"></i>Peer</span>';
+                } else {
+                    typeBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800"><i class="fa-solid fa-globe mr-1"></i>NTP / NTS</span>';
+                }
+
+                return `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                        <td class="py-3 px-4">${badgeHtml}</td>
+                        <td class="py-3 px-4">${typeBadge}</td>
+                        <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${s.name}</td>
+                        <td class="py-3 px-4">Stratum ${s.stratum}</td>
+                        <td class="py-3 px-4">${s.poll}</td>
+                        <td class="py-3 px-4">${s.reach}</td>
+                        <td class="py-3 px-4">${s.last_rx}</td>
+                        <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">${s.sample}</td>
+                    </tr>
+                `;
+            }).join('') || `<tr><td colspan="8" class="py-4 text-center text-slate-500">Keine passenden Upstream-Quellen gefunden</td></tr>`;
         }
 
         async function fetchData() {
@@ -439,21 +668,49 @@
                 const data = await res.json();
 
                 const t = data.tracking || {};
-                
-                // Reference Source exakt wie in der Vorlage füllen (IP und Servername)
+                updateSyncBadge(data.is_synced);
+
+                if (document.getElementById('stat-db-size')) {
+                    document.getElementById('stat-db-size').innerText = data.db_size || "0 KB";
+                    
+                    const daemonDot = document.getElementById('stat-daemon-dot');
+                    const daemonText = document.getElementById('stat-daemon-text');
+                    if (t.chrony_alive) {
+                        daemonDot.className = "h-2.5 w-2.5 rounded-full bg-emerald-500";
+                        daemonText.innerText = "Aktiv (`chronyc` antwortet)";
+                    } else {
+                        daemonDot.className = "h-2.5 w-2.5 rounded-full bg-rose-500";
+                        daemonText.innerText = "Inaktiv / Fehler";
+                    }
+
+                    const syncDot = document.getElementById('stat-sync-dot');
+                    const syncText = document.getElementById('stat-sync-text');
+                    if (data.is_synced) {
+                        syncDot.className = "h-2.5 w-2.5 rounded-full bg-emerald-500";
+                        syncText.innerText = "Locked / Synchron";
+                    } else {
+                        syncDot.className = "h-2.5 w-2.5 rounded-full bg-rose-500";
+                        syncText.innerText = "Unsynchronisiert / Off-Line";
+                    }
+                }
+
                 document.getElementById('kpi-refid').innerText = data.ref_ip || t.reference_id || '-';
                 document.getElementById('kpi-refname').innerText = data.ref_name || 'System Clock Source';
 
-                // Offset sauber in Mikrosekunden µs formatieren
                 let rawTime = t.system_time || '0';
                 let formattedOffset = '-';
                 if (rawTime !== '-') {
                     let match = rawTime.match(/([0-9.-]+)\s*seconds?/);
                     if (match) {
                         let sec = parseFloat(match[1]);
-                        let us = sec * 1000000;
                         let sign = rawTime.includes('slow') ? '-' : '+';
-                        formattedOffset = `${sign}${Math.abs(us).toFixed(2)} µs`;
+                        let us = sec * 1000000;
+                        let absUs = Math.abs(us);
+                        if (absUs < 1 && absUs !== 0) {
+                            formattedOffset = `${sign}${(absUs * 1000).toFixed(1)} ns`;
+                        } else {
+                            formattedOffset = `${sign}${absUs.toFixed(2)} µs`;
+                        }
                     } else {
                         formattedOffset = rawTime;
                     }
@@ -462,34 +719,23 @@
                 document.getElementById('kpi-rms').innerText = t.rms_offset || '-';
                 document.getElementById('kpi-stratum').innerText = t.stratum ? `Stratum ${t.stratum}` : '-';
                 document.getElementById('kpi-freq').innerText = t.frequency ? `${t.frequency} ppm` : '-';
-                document.getElementById('kpi-rootdelay').innerText = t.root_delay || '-';
-                document.getElementById('kpi-dispersion').innerText = t.root_dispersion || '-';
+                
+                // Pi Temperature & Skew KPIs
+                document.getElementById('kpi-temp').innerText = t.temperature ? `${parseFloat(t.temperature).toFixed(1)} °C` : '- °C';
+                document.getElementById('kpi-skew').innerText = t.skew ? `${t.skew} ppm` : '-';
 
-                // Upstream Quellen mappen
-                const sourcesBody = document.getElementById('sources-table-body');
-                sourcesBody.innerHTML = (data.sources || []).map(s => {
-                    let rawState = s.state.replace('^', '');
-                    let badgeHtml = '';
-                    if (rawState.includes('*')) {
-                        badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">* Selected</span>';
-                    } else if (rawState.includes('+')) {
-                        badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-800">+ Combined</span>';
-                    } else {
-                        badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${s.state}</span>`;
-                    }
+                if (data.stats) {
+                    const s24 = data.stats["24h"] || {min_offset: 0, max_offset: 0, min_freq: 0, max_freq: 0};
+                    const s72 = data.stats["72h"] || {min_offset: 0, max_offset: 0, min_freq: 0, max_freq: 0};
+                    document.getElementById('stat-24-offset').innerText = `${formatStatOffset(s24.min_offset)} / ${formatStatOffset(s24.max_offset)}`;
+                    document.getElementById('stat-24-freq').innerText = `${s24.min_freq.toFixed(2)} / ${s24.max_freq.toFixed(2)} ppm`;
+                    
+                    document.getElementById('stat-72-offset').innerText = `${formatStatOffset(s72.min_offset)} / ${formatStatOffset(s72.max_offset)}`;
+                    document.getElementById('stat-72-freq').innerText = `${s72.min_freq.toFixed(2)} / ${s72.max_freq.toFixed(2)} ppm`;
+                }
 
-                    return `
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                            <td class="py-3 px-4">${badgeHtml}</td>
-                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${s.name}</td>
-                            <td class="py-3 px-4">Stratum ${s.stratum}</td>
-                            <td class="py-3 px-4">${s.poll}</td>
-                            <td class="py-3 px-4">${s.reach}</td>
-                            <td class="py-3 px-4">${s.last_rx}</td>
-                            <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">${s.sample}</td>
-                        </tr>
-                    `;
-                }).join('') || `<tr><td colspan="7" class="py-4 text-center text-slate-500">Keine Upstream-Quellen gefunden</td></tr>`;
+                cachedSources = data.sources || [];
+                renderSources(cachedSources);
 
                 cachedClients = data.clients || [];
                 renderClients(cachedClients);
@@ -498,18 +744,35 @@
                     const labels = data.history.map(h => h.timestamp.split('T')[1].split('.')[0]);
                     const offsets = data.history.map(h => h.system_offset * 1000000);
                     const freqs = data.history.map(h => h.frequency);
+                    const temps = data.history.map(h => h.temperature);
+                    const skews = data.history.map(h => h.skew);
+                    const resFreqs = data.history.map(h => h.residual_freq);
 
+                    // Offset Chart
                     offsetChartInstance.data.labels = labels;
                     offsetChartInstance.data.datasets[0].data = offsets;
                     offsetChartInstance.update();
 
+                    // Frequency Chart
                     frequencyChartInstance.data.labels = labels;
                     frequencyChartInstance.data.datasets[0].data = freqs;
                     frequencyChartInstance.update();
+
+                    // Temperature Chart
+                    tempChartInstance.data.labels = labels;
+                    tempChartInstance.data.datasets[0].data = temps;
+                    tempChartInstance.update();
+
+                    // Metrics Chart (Skew & Residual)
+                    metricsChartInstance.data.labels = labels;
+                    metricsChartInstance.data.datasets[0].data = skews;
+                    metricsChartInstance.data.datasets[1].data = resFreqs;
+                    metricsChartInstance.update();
                 }
 
             } catch (err) {
                 console.warn('Verbindungsfehler zur API:', err);
+                updateSyncBadge(false);
             }
         }
 
@@ -535,6 +798,21 @@
             document.getElementById('kpi-total-packets').innerText = totalPackets.toLocaleString();
         }
 
+        async function resetHistory() {
+            if (!confirm('Möchtest du wirklich alle historischen Messwerte und Statistiken unwiderruflich löschen?')) return;
+            try {
+                const res = await fetch('/api/reset-history', { method: 'POST' });
+                if (res.ok) {
+                    alert('Statistiken wurden erfolgreich zurückgesetzt!');
+                    fetchData();
+                } else {
+                    alert('Fehler beim Zurücksetzen der Statistiken.');
+                }
+            } catch (e) {
+                alert('Verbindungsfehler beim Zurücksetzen.');
+            }
+        }
+
         async function loadSettings() {
             try {
                 const res = await fetch('/api/settings');
@@ -542,6 +820,10 @@
                     const data = await res.json();
                     if (data.polling_interval) document.getElementById('setting-polling').value = data.polling_interval;
                     if (data.warning_offset) document.getElementById('setting-offset').value = data.warning_offset;
+                    if (data.show_invalid_sources) {
+                        showInvalidSources = data.show_invalid_sources === 'true';
+                        document.getElementById('setting-show-invalid').checked = showInvalidSources;
+                    }
                 }
             } catch (e) {
                 console.warn('Einstellungen konnten nicht geladen werden.');
@@ -550,9 +832,11 @@
 
         async function saveSettings(e) {
             e.preventDefault();
+            showInvalidSources = document.getElementById('setting-show-invalid').checked;
             const formData = {
                 polling_interval: document.getElementById('setting-polling').value,
-                warning_offset: document.getElementById('setting-offset').value
+                warning_offset: document.getElementById('setting-offset').value,
+                show_invalid_sources: showInvalidSources ? 'true' : 'false'
             };
 
             try {
@@ -561,6 +845,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
+                renderSources(cachedSources);
                 const msgBox = document.getElementById('settings-save-msg');
                 msgBox.classList.remove('hidden');
                 setTimeout(() => msgBox.classList.add('hidden'), 3000);
@@ -572,7 +857,7 @@
         window.onload = function() {
             startLiveClock();
             initCharts();
-            fetchData();
+            loadSettings().then(() => fetchData());
             setInterval(fetchData, 5000);
         };
     </script>
