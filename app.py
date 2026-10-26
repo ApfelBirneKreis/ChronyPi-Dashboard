@@ -10,33 +10,36 @@ CORS(app)
 DB_NAME = "chrony_history.db"
 
 def init_db():
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            system_offset REAL,
-            frequency REAL,
-            stratum INTEGER
-        )
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS settings (
-            key TEXT PRIMARY KEY,
-            value TEXT
-        )
-    ''')
-    defaults = {
-        'polling_interval': '5',
-        'warning_offset': '10.0',
-        'warning_drift': '50.0',
-        'retention_days': '30'
-    }
-    for k, v in defaults.items():
-        cursor.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", (k, v))
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT,
+                system_offset REAL,
+                frequency REAL,
+                stratum INTEGER
+            )
+        ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS settings (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            )
+        ''')
+        defaults = {
+            'polling_interval': '5',
+            'warning_offset': '10.0',
+            'warning_drift': '50.0',
+            'retention_days': '30'
+        }
+        for k, v in defaults.items():
+            cursor.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", (k, v))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error initializing DB: {e}")
 
 def safe_float(val, default=0.0):
     try:
@@ -55,7 +58,7 @@ def safe_int(val, default=0):
 def parse_tracking():
     data = {}
     try:
-        output = subprocess.check_output(["chronyc", "tracking"], universal_newlines=True)
+        output = subprocess.check_output(["chronyc", "tracking"], universal_newlines=True, timeout=2)
         for line in output.splitlines():
             parts = line.split(":", 1)
             if len(parts) == 2:
@@ -71,7 +74,7 @@ def parse_sources():
     ref_ip = "-"
     ref_name = "-"
     try:
-        output = subprocess.check_output(["chronyc", "sources"], universal_newlines=True)
+        output = subprocess.check_output(["chronyc", "sources"], universal_newlines=True, timeout=2)
         lines = output.splitlines()
         for line in lines[2:]:
             if not line.strip():
@@ -99,27 +102,19 @@ def parse_sources():
 def parse_clients():
     clients = []
     try:
-        output = subprocess.check_output(["chronyc", "clients"], universal_newlines=True)
+        output = subprocess.check_output(["chronyc", "clients"], universal_newlines=True, timeout=2)
         lines = output.splitlines()
         for line in lines:
             if "Hostname" in line or "===" in line or not line.strip():
                 continue
             parts = line.split()
-            if len(parts) >= 7:
+            if len(parts) >= 2:
                 clients.append({
                     "hostname": parts[0],
                     "ntp_packets": safe_int(parts[1]),
-                    "drop_packets": safe_int(parts[5]),
-                    "interval": f"{parts[6]} ({2**safe_int(parts[6])}s)",
-                    "last": f"{parts[3]}s ago"
-                })
-            elif len(parts) >= 2:
-                clients.append({
-                    "hostname": parts[0],
-                    "ntp_packets": safe_int(parts[1]),
-                    "drop_packets": 0,
-                    "interval": "-",
-                    "last": "-"
+                    "drop_packets": safe_int(parts[5]) if len(parts) > 5 else 0,
+                    "interval": f"{parts[6]}s" if len(parts) > 6 else "-",
+                    "last": f"{parts[3]}s ago" if len(parts) > 3 else "-"
                 })
     except Exception as e:
         print(f"Error parsing clients: {e}")
@@ -155,26 +150,24 @@ def get_min_max_stats():
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
         
-        # 24 Stunden Werte
         cursor.execute("SELECT MIN(system_offset), MAX(system_offset), MIN(frequency), MAX(frequency) FROM history WHERE timestamp >= datetime('now', '-1 day')")
         row24 = cursor.fetchone()
         if row24 and row24[0] is not None:
             stats["24h"] = {
                 "min_offset": row24[0] * 1000000,
                 "max_offset": row24[1] * 1000000,
-                "min_freq": row24[2],
-                "max_freq": row24[3]
+                "min_freq": row24[2] or 0,
+                "max_freq": row24[3] or 0
             }
             
-        # 72 Stunden Werte
         cursor.execute("SELECT MIN(system_offset), MAX(system_offset), MIN(frequency), MAX(frequency) FROM history WHERE timestamp >= datetime('now', '-3 days')")
         row72 = cursor.fetchone()
         if row72 and row72[0] is not None:
             stats["72h"] = {
                 "min_offset": row72[0] * 1000000,
                 "max_offset": row72[1] * 1000000,
-                "min_freq": row72[2],
-                "max_freq": row72[3]
+                "min_freq": row72[2] or 0,
+                "max_freq": row72[3] or 0
             }
         conn.close()
     except Exception as e:
@@ -187,38 +180,42 @@ def index():
 
 @app.route("/api/chrony")
 def get_chrony():
-    tracking = parse_tracking()
-    save_history(tracking)
-    sources, ref_ip, ref_name = parse_sources()
-    clients = parse_clients()
-    stats = get_min_max_stats()
-    
-    history = []
     try:
-        conn = sqlite3.connect(DB_NAME)
-        cursor = conn.cursor()
-        cursor.execute("SELECT timestamp, system_offset, frequency, stratum FROM history ORDER BY id DESC LIMIT 100")
-        rows = cursor.fetchall()
-        conn.close()
-        for row in reversed(rows):
-            history.append({
-                "timestamp": row[0],
-                "system_offset": row[1],
-                "frequency": row[2],
-                "stratum": row[3]
-            })
-    except Exception as e:
-        print(f"Error reading history: {e}")
+        tracking = parse_tracking()
+        save_history(tracking)
+        sources, ref_ip, ref_name = parse_sources()
+        clients = parse_clients()
+        stats = get_min_max_stats()
+        
+        history = []
+        try:
+            conn = sqlite3.connect(DB_NAME)
+            cursor = conn.cursor()
+            cursor.execute("SELECT timestamp, system_offset, frequency, stratum FROM history ORDER BY id DESC LIMIT 100")
+            rows = cursor.fetchall()
+            conn.close()
+            for row in reversed(rows):
+                history.append({
+                    "timestamp": row[0],
+                    "system_offset": row[1] if row[1] is not None else 0,
+                    "frequency": row[2] if row[2] is not None else 0,
+                    "stratum": row[3] if row[3] is not None else 0
+                })
+        except Exception as e:
+            print(f"Error reading history: {e}")
 
-    return jsonify({
-        "tracking": tracking,
-        "sources": sources,
-        "clients": clients,
-        "history": history,
-        "ref_ip": ref_ip,
-        "ref_name": ref_name,
-        "stats": stats
-    })
+        return jsonify({
+            "tracking": tracking,
+            "sources": sources,
+            "clients": clients,
+            "history": history,
+            "ref_ip": ref_ip,
+            "ref_name": ref_name,
+            "stats": stats
+        })
+    except Exception as e:
+        print(f"API Error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/api/export/csv")
 def export_csv():
@@ -243,20 +240,23 @@ def export_csv():
 
 @app.route("/api/settings", methods=["GET", "POST"])
 def handle_settings():
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    if request.method == "POST":
-        data = request.json
-        for key, value in data.items():
-            cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (key, str(value)))
-        conn.commit()
-        conn.close()
-        return jsonify({"status": "success", "message": "Settings saved"})
-    else:
-        cursor.execute("SELECT key, value FROM settings")
-        settings = {row[0]: row[1] for row in cursor.fetchall()}
-        conn.close()
-        return jsonify(settings)
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        if request.method == "POST":
+            data = request.json or {}
+            for key, value in data.items():
+                cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (key, str(value)))
+            conn.commit()
+            conn.close()
+            return jsonify({"status": "success", "message": "Settings saved"})
+        else:
+            cursor.execute("SELECT key, value FROM settings")
+            settings = {row[0]: row[1] for row in cursor.fetchall()}
+            conn.close()
+            return jsonify(settings)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     init_db()
