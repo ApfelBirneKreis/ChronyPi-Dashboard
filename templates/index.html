@@ -68,9 +68,9 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <h1 class="text-lg font-bold text-slate-900 dark:text-white tracking-wide">Chrony<span class="text-emerald-500 dark:text-emerald-400">Pi</span></h1>
-                            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-mono">v2.6-ns</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-mono">v2.7-kpi</span>
                         </div>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Raspberry Pi Time Server & Client Telemetry</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Raspberry Pi Time Server & Telemetry</p>
                     </div>
                 </div>
 
@@ -140,15 +140,15 @@
                 </div>
             </div>
 
-            <!-- Root Delay -->
+            <!-- Pi Temperature -->
             <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition shadow-sm">
                 <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs">
-                    <span>Root Delay / Dispersion</span>
-                    <i class="fa-solid fa-network-wired text-amber-500 dark:text-amber-400"></i>
+                    <span>Pi SoC Temp</span>
+                    <i class="fa-solid fa-temperature-half text-rose-500 dark:text-rose-400"></i>
                 </div>
                 <div class="mt-2">
-                    <div id="kpi-rootdelay" class="text-lg font-bold font-mono text-amber-600 dark:text-amber-300">-</div>
-                    <div class="text-xs text-slate-500 dark:text-slate-400">Dispersion: <span id="kpi-dispersion" class="font-mono text-slate-700 dark:text-slate-300">-</span></div>
+                    <div id="kpi-temp" class="text-xl font-bold font-mono text-rose-600 dark:text-rose-400">- °C</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400">Skew: <span id="kpi-skew" class="font-mono text-slate-700 dark:text-slate-300">-</span></div>
                 </div>
             </div>
 
@@ -166,17 +166,21 @@
         </div>
 
         <!-- DASHBOARD TAB NAVIGATION -->
-        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
             <nav class="flex space-x-2" aria-label="Tabs">
-                <button id="tab-btn-tracking" onclick="switchTab('tracking')" class="px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-2 transition">
+                <button id="tab-btn-tracking" onclick="switchTab('tracking')" class="px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-2 transition whitespace-nowrap">
                     <i class="fa-solid fa-chart-line"></i>
-                    <span>Tracking & History (Time-Pi)</span>
+                    <span>Tracking & History</span>
                 </button>
-                <button id="tab-btn-clients" onclick="switchTab('clients')" class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition">
+                <button id="tab-btn-kpi" onclick="switchTab('kpi')" class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition whitespace-nowrap">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>System-Telemetrie & KPIs</span>
+                </button>
+                <button id="tab-btn-clients" onclick="switchTab('clients')" class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition whitespace-nowrap">
                     <i class="fa-solid fa-users-viewfinder"></i>
-                    <span>Client Monitoring (TICC-DASH)</span>
+                    <span>Client Monitoring</span>
                 </button>
-                <button id="tab-btn-settings" onclick="switchTab('settings')" class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition">
+                <button id="tab-btn-settings" onclick="switchTab('settings')" class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition whitespace-nowrap">
                     <i class="fa-solid fa-gear"></i>
                     <span>Einstellungen</span>
                 </button>
@@ -191,7 +195,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <div>
                             <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">System Clock Offset</h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">Abweichung von der Referenzzeit (Nanoseconds ns / Microseconds µs)</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Abweichung von der Referenzzeit (ns / µs)</p>
                         </div>
                     </div>
                     <div class="relative h-64 w-full flex-1">
@@ -275,7 +279,38 @@
             </div>
         </div>
 
-        <!-- TAB 2: CONNECTED CLIENTS DASHBOARD -->
+        <!-- TAB 2: KPI & SYSTEM TELEMETRY -->
+        <div id="tab-kpi-content" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Temperature Chart -->
+                <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Raspberry Pi SoC Temperatur</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Prozessor- und Platinentemperatur in °C</p>
+                        </div>
+                    </div>
+                    <div class="relative h-64 w-full flex-1">
+                        <canvas id="tempChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Skew & Residual Freq Chart -->
+                <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Erweiterte Metriken (Skew & Residual)</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Fehlerungenauigkeit (Skew) und Restdrift in ppm</p>
+                        </div>
+                    </div>
+                    <div class="relative h-64 w-full flex-1">
+                        <canvas id="metricsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: CONNECTED CLIENTS DASHBOARD -->
         <div id="tab-clients-content" class="hidden space-y-6">
             <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
                 <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
@@ -301,7 +336,7 @@
             </div>
         </div>
 
-        <!-- TAB 3: EINSTELLUNGEN & SYSTEM STATUS -->
+        <!-- TAB 4: EINSTELLUNGEN & SYSTEM STATUS -->
         <div id="tab-settings-content" class="hidden space-y-6">
             
             <!-- Live Status Overview Box -->
@@ -385,7 +420,7 @@
                     <div class="flex items-center justify-between bg-slate-100 dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
                         <div>
                             <p class="text-sm font-bold text-slate-800 dark:text-slate-200">Historie als CSV herunterladen</p>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">Exportiert alle gespeicherten Messwerte (Timestamp, Offset, Drift, Stratum).</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Exportiert alle gespeicherten Messwerte (Timestamp, Offset, Drift, Temp, Skew).</p>
                         </div>
                         <a href="/api/export/csv" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold rounded-lg text-xs transition flex items-center gap-2 shadow-md">
                             <i class="fa-solid fa-file-csv text-sm"></i>
@@ -427,6 +462,9 @@
     <script>
         let offsetChartInstance = null;
         let frequencyChartInstance = null;
+        let tempChartInstance = null;
+        let metricsChartInstance = null;
+        
         let cachedClients = [];
         let cachedSources = [];
         let showInvalidSources = false;
@@ -454,27 +492,34 @@
 
         function switchTab(tab) {
             const btnTracking = document.getElementById('tab-btn-tracking');
+            const btnKpi = document.getElementById('tab-btn-kpi');
             const btnClients = document.getElementById('tab-btn-clients');
             const btnSettings = document.getElementById('tab-btn-settings');
             
             const contentTracking = document.getElementById('tab-tracking-content');
+            const contentKpi = document.getElementById('tab-kpi-content');
             const contentClients = document.getElementById('tab-clients-content');
             const contentSettings = document.getElementById('tab-settings-content');
 
-            const inactiveClass = "px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition";
-            const activeClass = "px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-2 transition";
+            const inactiveClass = "px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent flex items-center gap-2 transition whitespace-nowrap";
+            const activeClass = "px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-2 transition whitespace-nowrap";
 
             if (btnTracking) btnTracking.className = inactiveClass;
+            if (btnKpi) btnKpi.className = inactiveClass;
             if (btnClients) btnClients.className = inactiveClass;
             if (btnSettings) btnSettings.className = inactiveClass;
 
             if (contentTracking) contentTracking.classList.add('hidden');
+            if (contentKpi) contentKpi.classList.add('hidden');
             if (contentClients) contentClients.classList.add('hidden');
             if (contentSettings) contentSettings.classList.add('hidden');
 
             if (tab === 'tracking') {
                 if (contentTracking) contentTracking.classList.remove('hidden');
                 if (btnTracking) btnTracking.className = activeClass;
+            } else if (tab === 'kpi') {
+                if (contentKpi) contentKpi.classList.remove('hidden');
+                if (btnKpi) btnKpi.className = activeClass;
             } else if (tab === 'clients') {
                 if (contentClients) contentClients.classList.remove('hidden');
                 if (btnClients) btnClients.className = activeClass;
@@ -490,58 +535,42 @@
             const textColor = isDark ? '#94a3b8' : '#475569';
             const gridColor = isDark ? 'rgba(51, 65, 85, 0.3)' : 'rgba(226, 232, 240, 0.8)';
 
+            // Offset Chart
             if (offsetChartInstance) offsetChartInstance.destroy();
-            const ctxOffset = document.getElementById('offsetChart').getContext('2d');
-            offsetChartInstance = new Chart(ctxOffset, {
+            offsetChartInstance = new Chart(document.getElementById('offsetChart').getContext('2d'), {
                 type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Offset (µs)',
-                        data: [],
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        fill: true,
-                        tension: 0.35,
-                        pointRadius: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { ticks: { color: textColor, maxTicksLimit: 8 }, grid: { color: gridColor } },
-                        y: { ticks: { color: textColor }, grid: { color: gridColor } }
-                    }
-                }
+                data: { labels: [], datasets: [{ label: 'Offset', data: [], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.35, pointRadius: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: textColor, maxTicksLimit: 8 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } } }
             });
 
+            // Frequency Drift Chart
             if (frequencyChartInstance) frequencyChartInstance.destroy();
-            const ctxFreq = document.getElementById('frequencyChart').getContext('2d');
-            frequencyChartInstance = new Chart(ctxFreq, {
+            frequencyChartInstance = new Chart(document.getElementById('frequencyChart').getContext('2d'), {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Drift (ppm)', data: [], borderColor: '#06b6d4', backgroundColor: 'rgba(6, 182, 212, 0.1)', fill: true, tension: 0.35, pointRadius: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: textColor, maxTicksLimit: 8 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } } }
+            });
+
+            // Temperature Chart
+            if (tempChartInstance) tempChartInstance.destroy();
+            tempChartInstance = new Chart(document.getElementById('tempChart').getContext('2d'), {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'SoC Temp (°C)', data: [], borderColor: '#f43f5e', backgroundColor: 'rgba(244, 63, 94, 0.1)', fill: true, tension: 0.35, pointRadius: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: textColor, maxTicksLimit: 8 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } } }
+            });
+
+            // Metrics Chart (Skew & Residual)
+            if (metricsChartInstance) metricsChartInstance.destroy();
+            metricsChartInstance = new Chart(document.getElementById('metricsChart').getContext('2d'), {
                 type: 'line',
                 data: {
                     labels: [],
-                    datasets: [{
-                        label: 'Drift (ppm)',
-                        data: [],
-                        borderColor: '#06b6d4',
-                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                        fill: true,
-                        tension: 0.35,
-                        pointRadius: 2
-                    }]
+                    datasets: [
+                        { label: 'Skew (ppm)', data: [], borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.1)', fill: false, tension: 0.35, pointRadius: 2 },
+                        { label: 'Residual Freq (ppm)', data: [], borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: false, tension: 0.35, pointRadius: 2 }
+                    ]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { ticks: { color: textColor, maxTicksLimit: 8 }, grid: { color: gridColor } },
-                        y: { ticks: { color: textColor }, grid: { color: gridColor } }
-                    }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { color: textColor } } }, scales: { x: { ticks: { color: textColor, maxTicksLimit: 8 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } } }
             });
         }
 
@@ -637,7 +666,6 @@
                 const data = await res.json();
 
                 const t = data.tracking || {};
-                
                 updateSyncBadge(data.is_synced);
 
                 if (document.getElementById('stat-db-size')) {
@@ -689,8 +717,10 @@
                 document.getElementById('kpi-rms').innerText = t.rms_offset || '-';
                 document.getElementById('kpi-stratum').innerText = t.stratum ? `Stratum ${t.stratum}` : '-';
                 document.getElementById('kpi-freq').innerText = t.frequency ? `${t.frequency} ppm` : '-';
-                document.getElementById('kpi-rootdelay').innerText = t.root_delay || '-';
-                document.getElementById('kpi-dispersion').innerText = t.root_dispersion || '-';
+                
+                // Pi Temperature & Skew KPIs
+                document.getElementById('kpi-temp').innerText = t.temperature ? `${parseFloat(t.temperature).toFixed(1)} °C` : '- °C';
+                document.getElementById('kpi-skew').innerText = t.skew ? `${t.skew} ppm` : '-';
 
                 if (data.stats) {
                     const s24 = data.stats["24h"] || {min_offset: 0, max_offset: 0, min_freq: 0, max_freq: 0};
@@ -712,14 +742,30 @@
                     const labels = data.history.map(h => h.timestamp.split('T')[1].split('.')[0]);
                     const offsets = data.history.map(h => h.system_offset * 1000000);
                     const freqs = data.history.map(h => h.frequency);
+                    const temps = data.history.map(h => h.temperature);
+                    const skews = data.history.map(h => h.skew);
+                    const resFreqs = data.history.map(h => h.residual_freq);
 
+                    // Offset Chart
                     offsetChartInstance.data.labels = labels;
                     offsetChartInstance.data.datasets[0].data = offsets;
                     offsetChartInstance.update();
 
+                    // Frequency Chart
                     frequencyChartInstance.data.labels = labels;
                     frequencyChartInstance.data.datasets[0].data = freqs;
                     frequencyChartInstance.update();
+
+                    // Temperature Chart
+                    tempChartInstance.data.labels = labels;
+                    tempChartInstance.data.datasets[0].data = temps;
+                    tempChartInstance.update();
+
+                    // Metrics Chart (Skew & Residual)
+                    metricsChartInstance.data.labels = labels;
+                    metricsChartInstance.data.datasets[0].data = skews;
+                    metricsChartInstance.data.datasets[1].data = resFreqs;
+                    metricsChartInstance.update();
                 }
 
             } catch (err) {
