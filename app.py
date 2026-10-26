@@ -3,6 +3,7 @@ from flask_cors import CORS
 import subprocess
 import sqlite3
 import datetime
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -56,23 +57,46 @@ def safe_int(val, default=0):
         return default
 
 def parse_tracking():
-    data = {}
+    data = {
+        "reference_id": "-",
+        "reference_name": "-",
+        "system_time": "-",
+        "stratum": "-",
+        "frequency": "-",
+        "rms_offset": "-",
+        "root_delay": "-",
+        "root_dispersion": "-",
+        "leap_status": "Not Synchronized",
+        "is_synced": False,
+        "chrony_alive": False
+    }
     try:
         output = subprocess.check_output(["chronyc", "tracking"], universal_newlines=True, timeout=2)
+        data["chrony_alive"] = True
         for line in output.splitlines():
             parts = line.split(":", 1)
             if len(parts) == 2:
                 key = parts[0].strip().lower().replace(" ", "_")
                 val = parts[1].strip()
                 data[key] = val
+        
+        # Prüfung auf Synchronisation:
+        # 1. Reference ID darf nicht 00000000 sein
+        # 2. Leap Status muss Normal sein oder 'Not synchronized' darf nicht enthalten sein
+        ref_id = data.get("reference_id", "")
+        leap = data.get("leap_status", "").lower()
+        if ref_id and not ref_id.startswith("00000000") and "not synchronized" not in leap:
+            data["is_synced"] = True
+            
     except Exception as e:
-        print(f"Error parsing tracking: {e}")
+        print(f"Warning: Could not run 'chronyc tracking': {e}")
     return data
 
 def parse_sources():
     sources = []
     ref_ip = "-"
     ref_name = "-"
+    has_active_source = False
     try:
         output = subprocess.check_output(["chronyc", "sources"], universal_newlines=True, timeout=2)
         lines = output.splitlines()
@@ -95,9 +119,10 @@ def parse_sources():
                 if "*" in state:
                     ref_name = name
                     ref_ip = name
+                    has_active_source = True
     except Exception as e:
-        print(f"Error parsing sources: {e}")
-    return sources, ref_ip, ref_name
+        print(f"Warning: Could not run 'chronyc sources': {e}")
+    return sources, ref_ip, ref_name, has_active_source
 
 def parse_clients():
     clients = []
@@ -117,26 +142,19 @@ def parse_clients():
                     "last": f"{parts[3]}s ago" if len(parts) > 3 else "-"
                 })
     except Exception as e:
-        print(f"Error parsing clients: {e}")
+        print(f"Warning: Could not run 'chronyc clients': {e}")
     return clients
 
 def prune_database():
-    """ Überwacht und begrenzt die Datenbankgröße & löscht alte Einträge """
     try:
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
-        
-        # Auf Retention-Days prüfen (Standard 7 Tage)
         cursor.execute("SELECT value FROM settings WHERE key = 'retention_days'")
         row = cursor.fetchone()
         days = int(row[0]) if row and row[0].isdigit() else 7
         
-        # Alte Daten löschen
         cursor.execute("DELETE FROM history WHERE timestamp < datetime('now', ?)", (f"-{days} days",))
-        
-        # Absolute Obergrenze erzwingen (maximal 20.000 Messpunkte, um Aufblähen zu verhindern)
         cursor.execute("DELETE FROM history WHERE id NOT IN (SELECT id FROM history ORDER BY id DESC LIMIT 20000)")
-        
         conn.commit()
         conn.close()
     except Exception as e:
@@ -160,8 +178,6 @@ def save_history(tracking):
         )
         conn.commit()
         conn.close()
-        
-        # Datenbankgröße regulieren
         prune_database()
     except Exception as e:
         print(f"Error saving history: {e}")
@@ -199,6 +215,18 @@ def get_min_max_stats():
         print(f"Error calculating min/max stats: {e}")
     return stats
 
+def get_db_size_formatted():
+    try:
+        if os.path.exists(DB_NAME):
+            size_bytes = os.path.getsize(DB_NAME)
+            if size_bytes < 1024 * 1024:
+                return f"{size_bytes / 1024:.1f} KB"
+            else:
+                return f"{size_bytes / (1024 * 1024):.2f} MB"
+    except Exception:
+        pass
+    return "Unknown"
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -208,9 +236,12 @@ def get_chrony():
     try:
         tracking = parse_tracking()
         save_history(tracking)
-        sources, ref_ip, ref_name = parse_sources()
+        sources, ref_ip, ref_name, has_active_source = parse_sources()
         clients = parse_clients()
         stats = get_min_max_stats()
+        
+        # Finale Absicherung für Synchronisations-State
+        is_fully_synced = tracking.get("is_synced", False) and has_active_source
         
         history = []
         try:
@@ -236,7 +267,9 @@ def get_chrony():
             "history": history,
             "ref_ip": ref_ip,
             "ref_name": ref_name,
-            "stats": stats
+            "stats": stats,
+            "is_synced": is_fully_synced,
+            "db_size": get_db_size_formatted()
         })
     except Exception as e:
         print(f"API Error: {e}")
