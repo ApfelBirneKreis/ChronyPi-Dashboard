@@ -20,9 +20,19 @@ def init_db():
                 timestamp TEXT,
                 system_offset REAL,
                 frequency REAL,
-                stratum INTEGER
+                stratum INTEGER,
+                temperature REAL,
+                skew REAL,
+                residual_freq REAL
             )
         ''')
+        # Migration für bestehende Datenbanken (falls Spalten fehlen)
+        for col, col_type in [('temperature', 'REAL'), ('skew', 'REAL'), ('residual_freq', 'REAL')]:
+            try:
+                cursor.execute(f"ALTER TABLE history ADD COLUMN {col} {col_type}")
+            except sqlite3.OperationalError:
+                pass
+
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS settings (
                 key TEXT PRIMARY KEY,
@@ -57,6 +67,22 @@ def safe_int(val, default=0):
     except (ValueError, TypeError):
         return default
 
+def get_pi_temperature():
+    try:
+        output = subprocess.check_output(["vcgencmd", "measure_temp"], universal_newlines=True, timeout=1)
+        if "=" in output and "'C" in output:
+            val = output.split("=")[1].split("'C")[0]
+            return float(val)
+    except Exception:
+        pass
+    
+    try:
+        with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
+            val = int(f.read().strip()) / 1000.0
+            return float(val)
+    except Exception:
+        return 0.0
+
 def parse_tracking():
     data = {
         "reference_id": "-",
@@ -67,9 +93,12 @@ def parse_tracking():
         "rms_offset": "-",
         "root_delay": "-",
         "root_dispersion": "-",
+        "skew": "0.0",
+        "residual_freq": "0.0",
         "leap_status": "Not Synchronized",
         "is_synced": False,
-        "chrony_alive": False
+        "chrony_alive": False,
+        "temperature": get_pi_temperature()
     }
     try:
         output = subprocess.check_output(["chronyc", "tracking"], universal_newlines=True, timeout=2)
@@ -109,7 +138,6 @@ def parse_sources():
                 mode = ms[0] if len(ms) > 0 else "^"
                 state_char = ms[1] if len(ms) > 1 else "?"
                 
-                # Typbestimmung
                 if mode == '#':
                     source_type = "GPS / Local"
                 elif mode == '=':
@@ -117,7 +145,6 @@ def parse_sources():
                 else:
                     source_type = "NTP / NTS"
                     
-                # Gültigkeitsprüfung (Ungültig bei '?', 'x', '~' oder reach 0)
                 is_valid = state_char not in ['?', 'x', '~'] and parts[4] != '0'
                 
                 sources.append({
@@ -186,12 +213,15 @@ def save_history(tracking):
 
         freq = safe_float(tracking.get("frequency", "0"))
         stratum = safe_int(tracking.get("stratum", "0"))
+        temp = tracking.get("temperature", 0.0)
+        skew = safe_float(tracking.get("skew", "0"))
+        res_freq = safe_float(tracking.get("residual_freq", "0"))
 
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO history (timestamp, system_offset, frequency, stratum) VALUES (?, ?, ?, ?)",
-            (datetime.datetime.now().isoformat(), sys_offset, freq, stratum)
+            "INSERT INTO history (timestamp, system_offset, frequency, stratum, temperature, skew, residual_freq) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (datetime.datetime.now().isoformat(), sys_offset, freq, stratum, temp, skew, res_freq)
         )
         conn.commit()
         conn.close()
@@ -263,7 +293,7 @@ def get_chrony():
         try:
             conn = sqlite3.connect(DB_NAME)
             cursor = conn.cursor()
-            cursor.execute("SELECT timestamp, system_offset, frequency, stratum FROM history ORDER BY id DESC LIMIT 100")
+            cursor.execute("SELECT timestamp, system_offset, frequency, stratum, temperature, skew, residual_freq FROM history ORDER BY id DESC LIMIT 100")
             rows = cursor.fetchall()
             conn.close()
             for row in reversed(rows):
@@ -271,7 +301,10 @@ def get_chrony():
                     "timestamp": row[0],
                     "system_offset": row[1] if row[1] is not None else 0,
                     "frequency": row[2] if row[2] is not None else 0,
-                    "stratum": row[3] if row[3] is not None else 0
+                    "stratum": row[3] if row[3] is not None else 0,
+                    "temperature": row[4] if row[4] is not None else 0,
+                    "skew": row[5] if row[5] is not None else 0,
+                    "residual_freq": row[6] if row[6] is not None else 0
                 })
         except Exception as e:
             print(f"Error reading history: {e}")
@@ -308,13 +341,13 @@ def export_csv():
     try:
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
-        cursor.execute("SELECT timestamp, system_offset, frequency, stratum FROM history ORDER BY id ASC")
+        cursor.execute("SELECT timestamp, system_offset, frequency, stratum, temperature, skew, residual_freq FROM history ORDER BY id ASC")
         rows = cursor.fetchall()
         conn.close()
         
-        csv_data = "timestamp,system_offset_seconds,frequency_ppm,stratum\n"
+        csv_data = "timestamp,system_offset_seconds,frequency_ppm,stratum,temperature_c,skew_ppm,residual_freq_ppm\n"
         for row in rows:
-            csv_data += f"{row[0]},{row[1]},{row[2]},{row[3]}\n"
+            csv_data += f"{row[0]},{row[1]},{row[2]},{row[3]},{row[4]},{row[5]},{row[6]}\n"
             
         return Response(
             csv_data,
