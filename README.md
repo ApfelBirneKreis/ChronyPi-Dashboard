@@ -12,7 +12,7 @@ Ein modernes, leichtgewichtiges Web-Dashboard für den **Chrony NTP-Server** auf
 
 ## 📸 Dashboard Vorschau
 
-![ChronyPi Dashboard Preview](https://github.com/ApfelBirneKreis/ChronyPi-Dashboard/blob/f45ccaf4df5cb74dbbb8c0db2f61694da54897be/Chrony-Dashboard%20example.png)
+![ChronyPi Dashboard Preview](https://github.com/ApfelBirneKreis/ChronyPi-Dashboard/blob/8854180ee6fdb5137434dc0982a9ade85804bcb5/Chrony-Dashboard%20example.png)
 
 ---
 
