@@ -25,7 +25,7 @@
             }
         }
     </script>
-    <!-- FontAwesome Icons -->
+    <!-- FontAwesome Icons (v6.5.2 CDN) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -60,15 +60,17 @@
     <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <!-- Brand Title & Atom Logo -->
+                <!-- Brand Title & Atom Logo (Ausfallsicheres Inline SVG) -->
                 <div class="flex items-center space-x-3">
                     <div class="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 dark:text-emerald-400 shadow-inner flex items-center justify-center">
-                        <i class="fa-solid font-mono text-xl fa-atom"></i>
+                        <svg class="w-6 h-6 fill-current text-emerald-500 dark:text-emerald-400" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M256 0c-23.7 0-44.8 14.1-54.1 35.8l-3.9 9.1c-14.7 34.3-13.8 73.6 2.5 107.2C182.2 169.5 160 196.2 160 228c0 14.7 4.9 28.3 13.2 39.2c-29 27.6-67.6 44.8-110.2 44.8C28.2 312 0 340.2 0 375c0 14.1 4.6 27.3 12.5 38c-8 10.7-12.5 23.9-12.5 38c0 34.8 28.2 63 63 63c42.6 0 81.2-17.2 110.2-44.8c10.9 8.3 24.5 13.2 39.2 13.2c31.8 0 58.5-22.2 65.9-52.1c33.6 16.3 72.9 17.2 107.2 2.5l9.1-3.9c21.7-9.3 35.8-30.4 35.8-54.1c0-23.7-14.1-44.8-35.8-54.1l-9.1-3.9c-34.3-14.7-73.6-13.8-107.2 2.5c-7.4-29.9-34.1-52.1-65.9-52.1c-14.7 0-28.3 4.9-39.2 13.2c-27.6-29-44.8-67.6-44.8-110.2c0-34.8 28.2-63 63-63c14.1 0 27.3 4.6 38 12.5c10.7-8 23.9-12.5 38-12.5c34.8 0 63 28.2 63 63c0 42.6-17.2 81.2-44.8 110.2c8.3 10.9 13.2 24.5 13.2 39.2c0 31.8-22.2 58.5-52.1 65.9c16.3 33.6 17.2 72.9 2.5 107.2l-3.9 9.1c-9.3 21.7-30.4 35.8-54.1 35.8zM256 208a48 48 0 1 1 0 96 48 48 0 1 1 0-96z"/>
+                        </svg>
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
                             <h1 class="text-lg font-bold text-slate-900 dark:text-white tracking-wide">Chrony<span class="text-emerald-500 dark:text-emerald-400">Pi</span></h1>
-                            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-mono">v2.8-atom</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-mono">v2.9-svg</span>
                         </div>
                         <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Raspberry Pi Time Server & Telemetry</p>
                     </div>
