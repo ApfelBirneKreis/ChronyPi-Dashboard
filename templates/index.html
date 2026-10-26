@@ -212,6 +212,43 @@
                 </div>
             </div>
 
+            <!-- Min/Max Historical Statistics (24h & 72h) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                        <h4 class="text-xs font-mono uppercase tracking-wider text-slate-700 dark:text-slate-300 font-bold"><i class="fa-solid fa-clock-rotate-left text-emerald-500 mr-2"></i>24-Stunden Statistiken</h4>
+                        <span class="text-[10px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded">Letzte 24h</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 font-mono text-xs">
+                        <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                            <span class="text-slate-500 block text-[10px]">Offset Min / Max</span>
+                            <span id="stat-24-offset" class="text-slate-800 dark:text-slate-200 font-bold">- / -</span>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                            <span class="text-slate-500 block text-[10px]">Drift Min / Max</span>
+                            <span id="stat-24-freq" class="text-slate-800 dark:text-slate-200 font-bold">- / -</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                        <h4 class="text-xs font-mono uppercase tracking-wider text-slate-700 dark:text-slate-300 font-bold"><i class="fa-solid fa-calendar-days text-cyan-500 mr-2"></i>72-Stunden Statistiken</h4>
+                        <span class="text-[10px] font-mono bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 px-2 py-0.5 rounded">Letzte 72h</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 font-mono text-xs">
+                        <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                            <span class="text-slate-500 block text-[10px]">Offset Min / Max</span>
+                            <span id="stat-72-offset" class="text-slate-800 dark:text-slate-200 font-bold">- / -</span>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                            <span class="text-slate-500 block text-[10px]">Drift Min / Max</span>
+                            <span id="stat-72-freq" class="text-slate-800 dark:text-slate-200 font-bold">- / -</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Upstream Sources Table -->
             <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
                 <h3 class="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">Active Upstream NTP Sources (`chronyc sources`)</h3>
@@ -270,7 +307,7 @@
                         <i class="fa-solid fa-sliders text-emerald-500 dark:text-emerald-400"></i>
                         <span>Dashboard- & System-Einstellungen</span>
                     </h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Hier kannst du Dashboard-Parameter anpassen und Befehle zur manuellen Chrony-Verwaltung einsehen.</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Hier kannst du Dashboard-Parameter anpassen, Daten exportieren und Befehle zur manuellen Chrony-Verwaltung einsehen.</p>
                 </div>
 
                 <form id="settings-form" onsubmit="saveSettings(event)" class="space-y-6">
@@ -297,6 +334,21 @@
                         </button>
                     </div>
                 </form>
+
+                <!-- CSV Export Section -->
+                <div class="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-3">
+                    <h4 class="text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">Daten-Export (CSV)</h4>
+                    <div class="flex items-center justify-between bg-slate-100 dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
+                        <div>
+                            <p class="text-sm font-bold text-slate-800 dark:text-slate-200">Historie als CSV herunterladen</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Exportiert alle gespeicherten Messwerte (Timestamp, Offset, Drift, Stratum).</p>
+                        </div>
+                        <a href="/api/export/csv" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold rounded-lg text-xs transition flex items-center gap-2 shadow-md">
+                            <i class="fa-solid fa-file-csv text-sm"></i>
+                            <span>CSV Exportieren</span>
+                        </a>
+                    </div>
+                </div>
 
                 <!-- Information Section for Manual Commands -->
                 <div class="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-3">
@@ -440,11 +492,11 @@
 
                 const t = data.tracking || {};
                 
-                // Reference Source exakt wie in der Vorlage füllen (IP und Servername)
+                // Reference Source füllen
                 document.getElementById('kpi-refid').innerText = data.ref_ip || t.reference_id || '-';
                 document.getElementById('kpi-refname').innerText = data.ref_name || 'System Clock Source';
 
-                // Offset sauber in Mikrosekunden µs formatieren
+                // Offset formatieren
                 let rawTime = t.system_time || '0';
                 let formattedOffset = '-';
                 if (rawTime !== '-') {
@@ -465,6 +517,17 @@
                 document.getElementById('kpi-rootdelay').innerText = t.root_delay || '-';
                 document.getElementById('kpi-dispersion').innerText = t.root_dispersion || '-';
 
+                // Statistiken (24h / 72h Min/Max) aktualisieren
+                if (data.stats) {
+                    const s24 = data.stats["24h"];
+                    const s72 = data.stats["72h"];
+                    document.getElementById('stat-24-offset').innerText = `${s24.min_offset.toFixed(2)} / ${s24.max_offset.toFixed(2)} µs`;
+                    document.getElementById('stat-24-freq').innerText = `${s24.min_freq.toFixed(2)} / ${s24.max_freq.toFixed(2)} ppm`;
+                    
+                    document.getElementById('stat-72-offset').innerText = `${s72.min_offset.toFixed(2)} / ${s72.max_offset.toFixed(2)} µs`;
+                    document.getElementById('stat-72-freq').innerText = `${s72.min_freq.toFixed(2)} / ${s72.max_freq.toFixed(2)} ppm`;
+                }
+
                 // Upstream Quellen mappen
                 const sourcesBody = document.getElementById('sources-table-body');
                 sourcesBody.innerHTML = (data.sources || []).map(s => {
@@ -473,108 +536,4 @@
                     if (rawState.includes('*')) {
                         badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">* Selected</span>';
                     } else if (rawState.includes('+')) {
-                        badgeHtml = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-800">+ Combined</span>';
-                    } else {
-                        badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${s.state}</span>`;
-                    }
-
-                    return `
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                            <td class="py-3 px-4">${badgeHtml}</td>
-                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${s.name}</td>
-                            <td class="py-3 px-4">Stratum ${s.stratum}</td>
-                            <td class="py-3 px-4">${s.poll}</td>
-                            <td class="py-3 px-4">${s.reach}</td>
-                            <td class="py-3 px-4">${s.last_rx}</td>
-                            <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">${s.sample}</td>
-                        </tr>
-                    `;
-                }).join('') || `<tr><td colspan="7" class="py-4 text-center text-slate-500">Keine Upstream-Quellen gefunden</td></tr>`;
-
-                cachedClients = data.clients || [];
-                renderClients(cachedClients);
-
-                if (data.history && data.history.length > 0) {
-                    const labels = data.history.map(h => h.timestamp.split('T')[1].split('.')[0]);
-                    const offsets = data.history.map(h => h.system_offset * 1000000);
-                    const freqs = data.history.map(h => h.frequency);
-
-                    offsetChartInstance.data.labels = labels;
-                    offsetChartInstance.data.datasets[0].data = offsets;
-                    offsetChartInstance.update();
-
-                    frequencyChartInstance.data.labels = labels;
-                    frequencyChartInstance.data.datasets[0].data = freqs;
-                    frequencyChartInstance.update();
-                }
-
-            } catch (err) {
-                console.warn('Verbindungsfehler zur API:', err);
-            }
-        }
-
-        function renderClients(clients) {
-            const tbody = document.getElementById('clients-table-body');
-            document.getElementById('kpi-client-count').innerText = `${clients.length} Active`;
-            document.getElementById('client-table-count').innerText = `${clients.length} clients`;
-
-            let totalPackets = 0;
-            tbody.innerHTML = clients.map(c => {
-                totalPackets += (c.ntp_packets || 0);
-                return `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                        <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${c.hostname}</td>
-                        <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">${c.ntp_packets.toLocaleString()}</td>
-                        <td class="py-3 px-4 text-slate-400">${c.drop_packets}</td>
-                        <td class="py-3 px-4">${c.interval}</td>
-                        <td class="py-3 px-4">${c.last}</td>
-                    </tr>
-                `;
-            }).join('') || `<tr><td colspan="5" class="py-4 text-center text-slate-500">Keine Clients verbunden</td></tr>`;
-
-            document.getElementById('kpi-total-packets').innerText = totalPackets.toLocaleString();
-        }
-
-        async function loadSettings() {
-            try {
-                const res = await fetch('/api/settings');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.polling_interval) document.getElementById('setting-polling').value = data.polling_interval;
-                    if (data.warning_offset) document.getElementById('setting-offset').value = data.warning_offset;
-                }
-            } catch (e) {
-                console.warn('Einstellungen konnten nicht geladen werden.');
-            }
-        }
-
-        async function saveSettings(e) {
-            e.preventDefault();
-            const formData = {
-                polling_interval: document.getElementById('setting-polling').value,
-                warning_offset: document.getElementById('setting-offset').value
-            };
-
-            try {
-                await fetch('/api/settings', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-                const msgBox = document.getElementById('settings-save-msg');
-                msgBox.classList.remove('hidden');
-                setTimeout(() => msgBox.classList.add('hidden'), 3000);
-            } catch (e) {
-                alert('Fehler beim Speichern der Einstellungen.');
-            }
-        }
-
-        window.onload = function() {
-            startLiveClock();
-            initCharts();
-            fetchData();
-            setInterval(fetchData, 5000);
-        };
-    </script>
-</body>
-</html>
+                        badgeHtml = '<span class="px-2 py-0.
