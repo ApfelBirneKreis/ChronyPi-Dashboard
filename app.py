@@ -33,7 +33,8 @@ def init_db():
             'polling_interval': '5',
             'warning_offset': '10.0',
             'warning_drift': '50.0',
-            'retention_days': '7'
+            'retention_days': '7',
+            'show_invalid_sources': 'false'
         }
         for k, v in defaults.items():
             cursor.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", (k, v))
@@ -80,9 +81,6 @@ def parse_tracking():
                 val = parts[1].strip()
                 data[key] = val
         
-        # Prüfung auf Synchronisation:
-        # 1. Reference ID darf nicht 00000000 sein
-        # 2. Leap Status muss Normal sein oder 'Not synchronized' darf nicht enthalten sein
         ref_id = data.get("reference_id", "")
         leap = data.get("leap_status", "").lower()
         if ref_id and not ref_id.startswith("00000000") and "not synchronized" not in leap:
@@ -105,10 +103,29 @@ def parse_sources():
                 continue
             parts = line.split()
             if len(parts) >= 7:
-                state = parts[0]
+                ms = parts[0]
                 name = parts[1]
+                
+                mode = ms[0] if len(ms) > 0 else "^"
+                state_char = ms[1] if len(ms) > 1 else "?"
+                
+                # Typbestimmung
+                if mode == '#':
+                    source_type = "GPS / Local"
+                elif mode == '=':
+                    source_type = "Peer"
+                else:
+                    source_type = "NTP / NTS"
+                    
+                # Gültigkeitsprüfung (Ungültig bei '?', 'x', '~' oder reach 0)
+                is_valid = state_char not in ['?', 'x', '~'] and parts[4] != '0'
+                
                 sources.append({
-                    "state": state,
+                    "state": ms,
+                    "mode": mode,
+                    "state_char": state_char,
+                    "type": source_type,
+                    "is_valid": is_valid,
                     "name": name,
                     "stratum": parts[2],
                     "poll": parts[3],
@@ -116,7 +133,7 @@ def parse_sources():
                     "last_rx": parts[5],
                     "sample": " ".join(parts[6:])
                 })
-                if "*" in state:
+                if "*" in ms:
                     ref_name = name
                     ref_ip = name
                     has_active_source = True
@@ -240,7 +257,6 @@ def get_chrony():
         clients = parse_clients()
         stats = get_min_max_stats()
         
-        # Finale Absicherung für Synchronisations-State
         is_fully_synced = tracking.get("is_synced", False) and has_active_source
         
         history = []
