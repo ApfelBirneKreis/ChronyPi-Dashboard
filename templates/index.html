@@ -350,6 +350,21 @@
                     </div>
                 </div>
 
+                <!-- Reset Statistics Section -->
+                <div class="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-3">
+                    <h4 class="text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">Datenbank & Statistiken zurücksetzen</h4>
+                    <div class="flex items-center justify-between bg-slate-100 dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
+                        <div>
+                            <p class="text-sm font-bold text-slate-800 dark:text-slate-200">Statistiken-Historie löschen</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Setzt alle gesammelten Messwerte und Diagrammdaten zurück.</p>
+                        </div>
+                        <button onclick="resetHistory()" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg text-xs transition flex items-center gap-2 shadow-md">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                            <span>Statistik zurücksetzen</span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Information Section for Manual Commands -->
                 <div class="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-3">
                     <h4 class="text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">Manuelle Sudo-Befehle für SSH</h4>
@@ -594,6 +609,21 @@
             document.getElementById('kpi-total-packets').innerText = totalPackets.toLocaleString();
         }
 
+        async function resetHistory() {
+            if (!confirm('Möchtest du wirklich alle historischen Messwerte und Statistiken unwiderruflich löschen?')) return;
+            try {
+                const res = await fetch('/api/reset-history', { method: 'POST' });
+                if (res.ok) {
+                    alert('Statistiken wurden erfolgreich zurückgesetzt!');
+                    fetchData();
+                } else {
+                    alert('Fehler beim Zurücksetzen der Statistiken.');
+                }
+            } catch (e) {
+                alert('Verbindungsfehler beim Zurücksetzen.');
+            }
+        }
+
         async function loadSettings() {
             try {
                 const res = await fetch('/api/settings');
@@ -610,30 +640,4 @@
         async function saveSettings(e) {
             e.preventDefault();
             const formData = {
-                polling_interval: document.getElementById('setting-polling').value,
-                warning_offset: document.getElementById('setting-offset').value
-            };
-
-            try {
-                await fetch('/api/settings', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-                const msgBox = document.getElementById('settings-save-msg');
-                msgBox.classList.remove('hidden');
-                setTimeout(() => msgBox.classList.add('hidden'), 3000);
-            } catch (e) {
-                alert('Fehler beim Speichern der Einstellungen.');
-            }
-        }
-
-        window.onload = function() {
-            startLiveClock();
-            initCharts();
-            fetchData();
-            setInterval(fetchData, 5000);
-        };
-    </script>
-</body>
-</html>
+                polling
