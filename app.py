@@ -32,7 +32,7 @@ def init_db():
             'polling_interval': '5',
             'warning_offset': '10.0',
             'warning_drift': '50.0',
-            'retention_days': '30'
+            'retention_days': '7'
         }
         for k, v in defaults.items():
             cursor.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", (k, v))
@@ -120,6 +120,28 @@ def parse_clients():
         print(f"Error parsing clients: {e}")
     return clients
 
+def prune_database():
+    """ Überwacht und begrenzt die Datenbankgröße & löscht alte Einträge """
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        # Auf Retention-Days prüfen (Standard 7 Tage)
+        cursor.execute("SELECT value FROM settings WHERE key = 'retention_days'")
+        row = cursor.fetchone()
+        days = int(row[0]) if row and row[0].isdigit() else 7
+        
+        # Alte Daten löschen
+        cursor.execute("DELETE FROM history WHERE timestamp < datetime('now', ?)", (f"-{days} days",))
+        
+        # Absolute Obergrenze erzwingen (maximal 20.000 Messpunkte, um Aufblähen zu verhindern)
+        cursor.execute("DELETE FROM history WHERE id NOT IN (SELECT id FROM history ORDER BY id DESC LIMIT 20000)")
+        
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error pruning DB: {e}")
+
 def save_history(tracking):
     try:
         sys_offset_raw = tracking.get("system_time", "0")
@@ -138,6 +160,9 @@ def save_history(tracking):
         )
         conn.commit()
         conn.close()
+        
+        # Datenbankgröße regulieren
+        prune_database()
     except Exception as e:
         print(f"Error saving history: {e}")
 
@@ -215,6 +240,18 @@ def get_chrony():
         })
     except Exception as e:
         print(f"API Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/reset-history", methods=["POST"])
+def reset_history():
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM history")
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "success", "message": "Statistiken wurden zurückgesetzt."})
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/export/csv")
