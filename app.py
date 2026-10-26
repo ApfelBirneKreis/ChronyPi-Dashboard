@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, Response
 from flask_cors import CORS
 import subprocess
 import sqlite3
@@ -146,6 +146,41 @@ def save_history(tracking):
     except Exception as e:
         print(f"Error saving history: {e}")
 
+def get_min_max_stats():
+    stats = {
+        "24h": {"min_offset": 0, "max_offset": 0, "min_freq": 0, "max_freq": 0},
+        "72h": {"min_offset": 0, "max_offset": 0, "min_freq": 0, "max_freq": 0}
+    }
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        # 24 Stunden Werte
+        cursor.execute("SELECT MIN(system_offset), MAX(system_offset), MIN(frequency), MAX(frequency) FROM history WHERE timestamp >= datetime('now', '-1 day')")
+        row24 = cursor.fetchone()
+        if row24 and row24[0] is not None:
+            stats["24h"] = {
+                "min_offset": row24[0] * 1000000,
+                "max_offset": row24[1] * 1000000,
+                "min_freq": row24[2],
+                "max_freq": row24[3]
+            }
+            
+        # 72 Stunden Werte
+        cursor.execute("SELECT MIN(system_offset), MAX(system_offset), MIN(frequency), MAX(frequency) FROM history WHERE timestamp >= datetime('now', '-3 days')")
+        row72 = cursor.fetchone()
+        if row72 and row72[0] is not None:
+            stats["72h"] = {
+                "min_offset": row72[0] * 1000000,
+                "max_offset": row72[1] * 1000000,
+                "min_freq": row72[2],
+                "max_freq": row72[3]
+            }
+        conn.close()
+    except Exception as e:
+        print(f"Error calculating min/max stats: {e}")
+    return stats
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -156,12 +191,13 @@ def get_chrony():
     save_history(tracking)
     sources, ref_ip, ref_name = parse_sources()
     clients = parse_clients()
+    stats = get_min_max_stats()
     
     history = []
     try:
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
-        cursor.execute("SELECT timestamp, system_offset, frequency, stratum FROM history ORDER BY id DESC LIMIT 50")
+        cursor.execute("SELECT timestamp, system_offset, frequency, stratum FROM history ORDER BY id DESC LIMIT 100")
         rows = cursor.fetchall()
         conn.close()
         for row in reversed(rows):
@@ -180,8 +216,30 @@ def get_chrony():
         "clients": clients,
         "history": history,
         "ref_ip": ref_ip,
-        "ref_name": ref_name
+        "ref_name": ref_name,
+        "stats": stats
     })
+
+@app.route("/api/export/csv")
+def export_csv():
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("SELECT timestamp, system_offset, frequency, stratum FROM history ORDER BY id ASC")
+        rows = cursor.fetchall()
+        conn.close()
+        
+        csv_data = "timestamp,system_offset_seconds,frequency_ppm,stratum\n"
+        for row in rows:
+            csv_data += f"{row[0]},{row[1]},{row[2]},{row[3]}\n"
+            
+        return Response(
+            csv_data,
+            mimetype="text/csv",
+            headers={"Content-Disposition": "attachment;filename=chrony_history_export.csv"}
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/api/settings", methods=["GET", "POST"])
 def handle_settings():
